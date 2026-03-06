@@ -1,0 +1,31 @@
+# 开发环境 - 日志配置
+
+logging:
+  level:
+    # 应用日志
+    com.exceptioncoder.llm: DEBUG
+    
+    # Spring AI 日志
+    org.springframework.ai: DEBUG
+    
+    # LangChain4j 日志
+    dev.langchain4j: DEBUG
+    
+    # Spring 框架日志
+    org.springframework.web: DEBUG
+    org.springframework.data: DEBUG
+    
+    # Hibernate 日志
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  
+  # 日志格式
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+  
+  # 日志文件配置
+  file:
+    name: ${LOG_FILE:logs/dev/llm-platform.log}
+    max-size: ${LOG_FILE_MAX_SIZE:10MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:7}
+

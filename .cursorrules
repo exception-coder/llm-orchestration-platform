@@ -1,0 +1,305 @@
+# LLM Orchestration Platform - Cursor Rules
+
+## 项目技术栈
+
+- Java 17+
+- Spring Boot 3.x
+- Spring AI
+- LangChain4j
+- Qdrant Vector Database (通过 Spring AI 集成)
+- Maven
+
+## 技术选型原则
+
+**优先使用 Spring 官方组件和生态系统**
+
+当需要集成第三方服务或功能时，按以下优先级选择：
+
+1. **Spring 官方组件优先**：如果 Spring 生态系统（Spring Boot、Spring AI、Spring Cloud 等）已提供官方集成，优先使用官方组件
+   - 示例：向量数据库集成使用 `spring-ai-qdrant-store` 而非直接使用 `qdrant-client`
+   - 示例：LLM 集成使用 `spring-ai-openai` 而非直接使用 OpenAI SDK
+
+2. **Spring 生态兼容组件**：选择与 Spring 生态良好集成的第三方库
+   - 提供 Spring Boot Starter 的优先
+   - 支持 Spring 配置和依赖注入的优先
+
+3. **原生 SDK**：仅在 Spring 生态无官方支持时使用原生 SDK
+
+**优势：**
+- 统一的配置方式和编程模型
+- 自动配置和开箱即用
+- 更好的 Spring 生态集成
+- 官方维护和长期支持
+- 减少样板代码和复杂性
+
+## 代码规范
+
+### 0. 禁止创建示例代码类（重要）
+
+**禁止创建任何形式的示例代码类、使用示例类或演示类**
+
+```java
+// ❌ 禁止 - 不要创建这类文件
+XxxUsageExample.java
+XxxDemo.java
+XxxSample.java
+HowToUseXxx.java
+```
+
+**原因：**
+- 示例代码会导致项目臃肿
+- 增加维护成本
+- 容易过时且不会被实际使用
+- 占用代码库空间
+
+**替代方案：**
+- 在类的 JavaDoc 中提供简短的使用说明
+- 在 `/docs` 目录下创建 Markdown 文档（仅在必要时）
+- 在单元测试中展示使用方式
+
+```java
+// ✅ 正确 - 在 JavaDoc 中提供使用说明
+/**
+ * EmbeddingModel 代理类
+ * 
+ * 使用方式：
+ * <pre>
+ * // 默认使用 OpenAI
+ * delegatingEmbeddingModel.embed("文本");
+ * 
+ * // 切换到 Ollama
+ * DelegatingEmbeddingModel.setCurrentModel("ollama");
+ * delegatingEmbeddingModel.embed("文本");
+ * </pre>
+ */
+public class DelegatingEmbeddingModel implements EmbeddingModel {
+    // 实现代码
+}
+```
+
+### 1. Jakarta EE 注解（重要）
+
+**必须使用 Jakarta EE 命名空间，不要使用旧的 javax 命名空间**
+
+```java
+// ✅ 正确 - 使用 jakarta
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
+
+// ❌ 错误 - 不要使用 javax
+import javax.annotation.PostConstruct;
+import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
+```
+
+### 2. 依赖注入规范
+
+**优先使用构造函数注入，避免字段上使用 @Autowired 注解**
+
+```java
+// ✅ 正确
+@Service
+public class MyService {
+    private final MyRepository repository;
+    
+    public MyService(MyRepository repository) {
+        this.repository = repository;
+    }
+}
+
+// ❌ 错误
+@Service
+public class MyService {
+    @Autowired
+    private MyRepository repository;
+}
+```
+
+### 3. 配置类动态刷新
+
+**当 Configuration 类中的 @Value 字段需要动态刷新时，必须在 Configuration 类上也添加 @RefreshScope 注解**
+
+```java
+// ✅ 正确
+@RefreshScope
+@Configuration
+@ConfigurationProperties(prefix = "app")
+public class AppConfig {
+    private String value;
+}
+
+// ❌ 错误 - 只在 Bean 方法上添加 @RefreshScope 不够
+@Configuration
+public class AppConfig {
+    @RefreshScope
+    @Bean
+    public MyBean myBean() { ... }
+}
+```
+
+### 4. @RefreshScope Bean 依赖
+
+**不要在 @RefreshScope Bean 之间使用依赖注入，应该在每个 Bean 内部直接重新创建依赖对象**
+
+```java
+// ✅ 正确
+@RefreshScope
+@Bean
+public BeanA beanA(ConfigProperties config) {
+    return new BeanA(config.getValue());
+}
+
+@RefreshScope
+@Bean
+public BeanB beanB(ConfigProperties config) {
+    // 直接从配置创建，不依赖 beanA
+    return new BeanB(config.getValue());
+}
+
+// ❌ 错误 - RefreshScope Bean 之间相互依赖
+@RefreshScope
+@Bean
+public BeanB beanB(BeanA beanA) {
+    return new BeanB(beanA);
+}
+```
+
+### 5. 动态刷新配置的正确方法
+
+**使用 RefreshScope.refreshAll() 清空缓存，同时发布 EnvironmentChangeEvent 事件**
+
+```java
+// ✅ 正确
+refreshScope.refreshAll();
+applicationContext.publishEvent(new EnvironmentChangeEvent(changedKeys));
+
+// ❌ 错误 - 不要依赖 ContextRefresher 的自动检测
+contextRefresher.refresh();
+```
+
+### 6. DDD 分层架构
+
+**严格遵循 DDD-lite 分层架构，依赖方向：API → Application → Domain ← Infrastructure**
+
+```
+llm-api (REST 接口、DTO 转换)
+    ↓
+llm-application (用例编排、业务流程)
+    ↓
+llm-domain (核心模型、业务接口)
+    ↑
+llm-infrastructure (外部系统集成、接口实现)
+```
+
+**关键原则：**
+- Domain 层定义接口，Infrastructure 层实现
+- Domain 层不依赖任何外层
+- Infrastructure 实现 Domain 定义的接口
+
+### 7. Qdrant Client API 使用
+
+**使用 Qdrant Java Client 1.17.0 的标准 API**
+
+```java
+// ✅ 正确 - 使用 Arrays.asList() 避免类名冲突
+import io.qdrant.client.grpc.Collections.Distance;
+import io.qdrant.client.grpc.Points.*;
+
+client.upsertAsync(collectionName, Arrays.asList(point)).get();
+
+// ❌ 错误 - Collections 会与 Qdrant 的 Collections 类冲突
+import java.util.Collections;
+client.upsertAsync(collectionName, Collections.singletonList(point)).get();
+```
+
+**向量构建：**
+```java
+Vectors vectors = Vectors.newBuilder()
+    .setVector(Vector.newBuilder().addAllData(vectorList).build())
+    .build();
+```
+
+**Payload 构建：**
+```java
+Map<String, Value> payload = new HashMap<>();
+payload.put("key", Value.newBuilder().setStringValue(value).build());
+```
+
+### 8. 代码组织
+
+**每个类单一职责：**
+- Controller：协议处理，不包含业务逻辑
+- UseCase/Service：业务编排
+- Domain Model：业务规则和模型
+- Repository：数据访问抽象
+- Infrastructure：外部系统集成
+
+### 9. 异常处理
+
+**使用统一的异常处理器，业务异常使用自定义异常**
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
+        // 处理业务异常
+    }
+}
+```
+
+### 10. 日志规范
+
+**使用 SLF4J，合理使用日志级别**
+
+```java
+// ✅ 正确
+private static final Logger log = LoggerFactory.getLogger(MyClass.class);
+
+log.debug("调试信息: {}", param);
+log.info("业务操作: {}", operation);
+log.warn("警告信息: {}", warning);
+log.error("错误信息", exception);
+
+// ❌ 错误 - 不要使用 System.out.println
+System.out.println("日志信息");
+```
+
+## 测试规范
+
+1. 单元测试使用 JUnit 5
+2. Mock 使用 Mockito
+3. 集成测试使用 @SpringBootTest
+4. 测试类命名：`XxxTest` 或 `XxxIntegrationTest`
+
+## 文档规范
+
+**每次代码变更必须更新 `/docs/dev-log.md`**
+
+包含：
+- 日期
+- 任务描述
+- 创建/修改的文件
+- 关键设计决策
+- 变更原因
+
+## 命名规范
+
+- 类名：大驼峰 `UserService`
+- 方法名：小驼峰 `getUserById`
+- 常量：全大写下划线 `MAX_RETRY_COUNT`
+- 包名：全小写 `com.exceptioncoder.llm.domain`
+
+## Git 提交规范
+
+```
+feat: 新功能
+fix: 修复bug
+docs: 文档更新
+refactor: 重构
+test: 测试相关
+chore: 构建/工具相关
+```
+

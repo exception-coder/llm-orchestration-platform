@@ -1,0 +1,17 @@
+# 生产环境 - 日志配置
+
+logging:
+  level:
+    com.exceptioncoder.llm: ${LOG_LEVEL_APP:WARN}
+    org.springframework.ai: ${LOG_LEVEL_SPRING_AI:WARN}
+    dev.langchain4j: ${LOG_LEVEL_LANGCHAIN4J:WARN}
+    org.springframework.web: WARN
+    org.springframework.data: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  
+  file:
+    name: ${LOG_FILE:/var/log/llm-platform/llm-platform.log}
+    max-size: ${LOG_FILE_MAX_SIZE:100MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:90}
+

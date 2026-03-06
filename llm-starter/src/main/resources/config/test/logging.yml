@@ -1,0 +1,17 @@
+# 测试环境 - 日志配置
+
+logging:
+  level:
+    com.exceptioncoder.llm: INFO
+    org.springframework.ai: INFO
+    dev.langchain4j: INFO
+    org.springframework.web: INFO
+    org.springframework.data: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+  
+  file:
+    name: ${LOG_FILE:logs/test/llm-platform.log}
+    max-size: ${LOG_FILE_MAX_SIZE:50MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:30}
+

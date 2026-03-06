@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: llm-orchestration-platform
+  
+  # 默认激活 dev 环境
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  # 配置文件导入
+  config:
+    import:
+      - classpath:application-llm.yml
+      - optional:classpath:config/${spring.profiles.active}/datasource.yml
+      - optional:classpath:config/${spring.profiles.active}/spring-ai.yml
+      - optional:classpath:config/${spring.profiles.active}/logging.yml
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# 配置验证设置
+llm:
+  config:
+    validation:
+      # 是否启用配置验证（默认启用）
+      enabled: true
+      # 验证失败时是否阻止启动（默认仅警告，不阻止）
+      fail-on-error: false
+      # 需要验证的配置文件列表（相对于 config/{profile}/ 目录）
+      required-files:
+        - datasource.yml
+        - spring-ai.yml
+        - logging.yml
+      # 需要验证的关键配置属性（用于确认配置已加载）
+      required-properties:
+        - spring.datasource.url
+        - spring.ai.openai.api-key

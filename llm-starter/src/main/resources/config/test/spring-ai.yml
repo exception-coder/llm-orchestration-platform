@@ -1,0 +1,38 @@
+# 测试环境 - Spring AI 配置
+
+spring:
+  ai:
+    # OpenAI 配置
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        enabled: true
+        options:
+          model: ${OPENAI_MODEL:gpt-3.5-turbo}
+          temperature: ${OPENAI_TEMPERATURE:0.5}
+          max-tokens: ${OPENAI_MAX_TOKENS:1500}
+      embedding:
+        enabled: true  # 启用 OpenAI Embedding
+    
+    # Ollama 配置
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://test-ollama-server:11434}
+      chat:
+        enabled: true
+        options:
+          model: ${OLLAMA_MODEL:llama2}
+          temperature: ${OLLAMA_TEMPERATURE:0.5}
+      embedding:
+        enabled: true  # 启用 Ollama Embedding
+    
+    # Qdrant 向量库配置
+    vectorstore:
+      qdrant:
+        host: ${QDRANT_HOST:test-qdrant-server}
+        port: ${QDRANT_PORT:6334}
+        api-key: ${QDRANT_API_KEY}
+        use-tls: true
+        collection-name: ${QDRANT_COLLECTION:job_postings_test}
+        initialize-schema: true
+

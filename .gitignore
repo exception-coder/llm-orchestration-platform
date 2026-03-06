@@ -1,0 +1,70 @@
+.idea/
+target/
+*.iml
+*.log
+.DS_Store
+
+# Additional IDE files
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstats
+.eclipse/
+*.swp
+*.swo
+
+# OS files
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temp files
+*.tmp
+*.bak
+*~
+
+# Maven specific
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Java compiled
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Logs
+logs/
+*.log.*
+
+# Spring Boot
+application-local.yml
+application-local.properties
+
+# Security
+*.env
+*.env.*
+!*.env.example
+*.pem
+*.key
+*.p12
+*.jks
+credentials.json
+secrets.yml
+

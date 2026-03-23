@@ -1,0 +1,23 @@
+# Maven 构建产物
+**/target/
+**/.mvn/wrapper/
+
+# 前端构建产物
+llm-frontend/node_modules/
+llm-frontend/dist/
+
+# IDE
+.idea/
+**/*.iml
+.vscode/
+
+# Git
+.git/
+
+# 二进制 / 文档附件
+docs/*.drawio
+docs/*.bkp
+docs/.$*.bkp
+
+# Docker 数据卷
+docker/qdrant/data/

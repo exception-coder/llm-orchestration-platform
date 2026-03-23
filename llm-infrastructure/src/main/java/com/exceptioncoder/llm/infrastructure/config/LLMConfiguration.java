@@ -17,62 +17,48 @@ import java.util.Map;
 @Configuration
 @ConfigurationProperties(prefix = "llm")
 public class LLMConfiguration {
-    
+
     /**
      * 默认提供商
      */
-    private String defaultProvider = "openai";
-    
+    private String defaultProvider = "alibaba";
+
     /**
      * 默认模型
      */
-    private String defaultModel = "gpt-3.5-turbo";
-    
+    private String defaultModel = "qwen-plus";
+
     /**
-     * OpenAI配置
+     * 阿里云百炼配置（通义千问 / DeepSeek 等）
      */
-    private OpenAIConfig openai = new OpenAIConfig();
-    
+    private AlibabaConfig alibaba = new AlibabaConfig();
+
     /**
-     * Ollama配置
+     * Ollama 本地模型配置
      */
     private OllamaConfig ollama = new OllamaConfig();
-    
-    /**
-     * DeepSeek配置
-     */
-    private DeepSeekConfig deepseek = new DeepSeekConfig();
-    
+
     /**
      * 通用配置
      */
     private CommonConfig common = new CommonConfig();
-    
+
     @Data
-    public static class OpenAIConfig {
+    public static class AlibabaConfig {
         private String apiKey;
-        private String baseUrl = "https://api.openai.com";
-        private String model = "gpt-3.5-turbo";
-        private Double temperature = 0.7;
-        private Integer maxTokens = 2000;
-    }
-    
-    @Data
-    public static class OllamaConfig {
-        private String baseUrl = "http://localhost:11434";
-        private String model = "llama2";
-        private Double temperature = 0.7;
-    }
-    
-    @Data
-    public static class DeepSeekConfig {
-        private String apiKey;
-        private String baseUrl = "https://api.deepseek.com";
-        private String model = "deepseek-chat";
+        private String baseUrl = "https://dashscope.aliyuncs.com";
+        private String model = "qwen-plus";
         private Double temperature = 0.7;
         private Integer maxTokens = 4000;
     }
-    
+
+    @Data
+    public static class OllamaConfig {
+        private String baseUrl = "http://localhost:11434";
+        private String model = "llama3.2";
+        private Double temperature = 0.7;
+    }
+
     @Data
     public static class CommonConfig {
         private Integer timeout = 60000;
@@ -80,4 +66,3 @@ public class LLMConfiguration {
         private Map<String, Object> parameters = new HashMap<>();
     }
 }
-

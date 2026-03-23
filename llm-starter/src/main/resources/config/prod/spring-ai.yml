@@ -1,38 +1,52 @@
-# 生产环境 - Spring AI 配置
+# 生产环境 - Spring AI Alibaba 配置
 
 spring:
   ai:
-    # OpenAI 配置
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+    # 阿里云百炼（DashScope）配置
+   .alibaba:
+      api-key: ${DASHSCOPE_API_KEY}
+      base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
       chat:
-        enabled: true
         options:
-          model: ${OPENAI_MODEL:gpt-4}
-          temperature: ${OPENAI_TEMPERATURE:0.3}
-          max-tokens: ${OPENAI_MAX_TOKENS:2000}
-      embedding:
-        enabled: true  # 启用 OpenAI Embedding
-    
-    # Ollama 配置
+          model: ${DASHSCOPE_MODEL:qwen-plus}
+          temperature: ${DASHSCOPE_TEMPERATURE:0.3}
+          max-tokens: ${DASHSCOPE_MAX_TOKENS:4000}
+
+    # Ollama 生产服务器配置
     ollama:
       base-url: ${OLLAMA_BASE_URL}
       chat:
         enabled: true
         options:
-          model: ${OLLAMA_MODEL:llama2}
+          model: ${OLLAMA_MODEL:llama3.2}
           temperature: ${OLLAMA_TEMPERATURE:0.3}
       embedding:
-        enabled: true  # 启用 Ollama Embedding
-    
+        enabled: true
+
     # Qdrant 向量库配置
     vectorstore:
       qdrant:
         host: ${QDRANT_HOST}
         port: ${QDRANT_PORT:6334}
-        api-key: ${QDRANT_API_KEY}
+        api-key: ${QDRANT_API_KEY:}
         use-tls: true
         collection-name: ${QDRANT_COLLECTION:job_postings}
         initialize-schema: false
 
+# LLM 业务配置
+llm:
+  default-provider: alibaba
+  default-model: qwen-plus
+  alibaba:
+    api-key: ${DASHSCOPE_API_KEY}
+    base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
+    model: ${DASHSCOPE_MODEL:qwen-plus}
+    temperature: ${DASHSCOPE_TEMPERATURE:0.3}
+    max-tokens: ${DASHSCOPE_MAX_TOKENS:4000}
+  ollama:
+    base-url: ${OLLAMA_BASE_URL}
+    model: ${OLLAMA_MODEL:llama3.2}
+    temperature: ${OLLAMA_TEMPERATURE:0.3}
+  common:
+    timeout: 30000
+    max-retries: 2

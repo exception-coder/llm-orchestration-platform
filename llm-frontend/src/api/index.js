@@ -70,3 +70,34 @@ export const chatAPI = {
   sendMessage: (data) => request.post('/chat', data)
 }
 
+// 智能碎片记录 API
+export const noteAPI = {
+  // 捕获记录（AI 分类）
+  capture: (data) => request.post('/notes', data),
+
+  // 存储加密记录
+  saveEncrypted: (data) => request.post('/notes/encrypted', data),
+
+  // 获取所有记录
+  getAll: (params) => request.get('/notes', { params }),
+
+  // 按类目获取记录
+  getByCategory: (categoryId) => request.get('/notes', { params: { categoryId } }),
+
+  // 获取单个记录
+  getById: (id) => request.get(`/notes/${id}`),
+
+  // 搜索记录
+  search: (keyword) => request.get('/notes/search', { params: { keyword } }),
+
+  // 删除记录
+  delete: (id) => request.delete(`/notes/${id}`),
+
+  // 获取所有类目
+  getCategories: () => request.get('/notes/categories'),
+
+  // 删除类目
+  deleteCategory: (id) => request.delete(`/notes/categories/${id}`)
+}
+
+

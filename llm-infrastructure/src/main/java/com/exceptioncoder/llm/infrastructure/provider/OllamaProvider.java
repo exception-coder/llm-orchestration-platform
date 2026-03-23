@@ -2,102 +2,146 @@ package com.exceptioncoder.llm.infrastructure.provider;
 
 import com.exceptioncoder.llm.domain.model.LLMRequest;
 import com.exceptioncoder.llm.domain.model.LLMResponse;
+import com.exceptioncoder.llm.domain.model.Message;
 import com.exceptioncoder.llm.domain.model.TokenUsage;
 import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.ChatMessage;
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.model.output.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.ai.ollama.OllamaChatOptions;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Ollama Provider 实现
- * 使用 LangChain4j
+ * 使用 Spring AI Alibaba 提供的 Ollama 集成（原 LangChain4j 方案已废弃）
  */
 @Slf4j
 @Component
 public class OllamaProvider implements LLMProvider {
-    
+
     private final LLMConfiguration configuration;
-    
+    private OllamaChatModel chatModel;
+
     public OllamaProvider(LLMConfiguration configuration) {
         this.configuration = configuration;
     }
-    
+
     @Override
     public LLMResponse chat(LLMRequest request) {
         try {
-            ChatLanguageModel model = buildModel(request);
-            List<ChatMessage> messages = convertMessages(request);
-            
-            Response<AiMessage> response = model.generate(messages);
-            
+            OllamaChatModel model = getChatModel(request);
+            Prompt prompt = buildPrompt(request);
+            ChatResponse response = model.call(prompt);
             return convertResponse(response, request.getModel());
         } catch (Exception e) {
             log.error("Ollama 调用失败", e);
             throw new RuntimeException("Ollama 调用失败: " + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public Flux<String> chatStream(LLMRequest request) {
-        // Ollama 流式调用需要使用 StreamingChatLanguageModel
-        // 这里简化处理，返回完整响应
-        return Flux.just(chat(request).getContent());
+        try {
+            OllamaChatModel model = getChatModel(request);
+            Prompt prompt = buildPrompt(request);
+            return model.stream(prompt)
+                    .map(response -> response.getResult().getOutput().getContent());
+        } catch (Exception e) {
+            log.error("Ollama 流式调用失败", e);
+            return Flux.error(new RuntimeException("Ollama 流式调用失败: " + e.getMessage(), e));
+        }
     }
-    
+
     @Override
     public String getProviderName() {
         return "ollama";
     }
-    
+
     @Override
     public boolean supports(String model) {
-        return model != null && (model.contains("llama") || model.contains("mistral") || 
-                model.contains("qwen") || model.contains("deepseek"));
+        if (model == null) return false;
+        String lower = model.toLowerCase();
+        return lower.contains("llama") ||
+               lower.contains("mistral") ||
+               lower.contains("qwen") ||
+               lower.contains("deepseek") ||
+               lower.contains("phi") ||
+               lower.contains("gemma") ||
+               lower.contains("codellama") ||
+               lower.contains("nomic");
     }
-    
-    private ChatLanguageModel buildModel(LLMRequest request) {
-        return OllamaChatModel.builder()
-                .baseUrl(configuration.getOllama().getBaseUrl())
-                .modelName(request.getModel() != null ? request.getModel() : configuration.getOllama().getModel())
-                .temperature(request.getTemperature() != null ? request.getTemperature() : configuration.getOllama().getTemperature())
-                .timeout(Duration.ofMillis(configuration.getCommon().getTimeout()))
-                .build();
+
+    private synchronized OllamaChatModel getChatModel(LLMRequest request) {
+        if (chatModel == null) {
+            LLMConfiguration.OllamaConfig config = configuration.getOllama();
+            OllamaChatOptions options = OllamaChatOptions.builder()
+                    .withModel(request.getModel() != null ? request.getModel() : config.getModel())
+                    .withTemperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
+                    .build();
+            chatModel = OllamaChatModel.builder()
+                    .baseUrl(config.getBaseUrl())
+                    .defaultOptions(options)
+                    .build();
+        }
+        return chatModel;
     }
-    
-    private List<ChatMessage> convertMessages(LLMRequest request) {
-        return request.getMessages().stream()
-                .map(msg -> {
-                    return switch (msg.getRole().toLowerCase()) {
-                        case "system" -> dev.langchain4j.data.message.SystemMessage.from(msg.getContent());
-                        case "user" -> dev.langchain4j.data.message.UserMessage.from(msg.getContent());
-                        case "assistant" -> dev.langchain4j.data.message.AiMessage.from(msg.getContent());
-                        default -> dev.langchain4j.data.message.UserMessage.from(msg.getContent());
-                    };
-                })
+
+    private Prompt buildPrompt(LLMRequest request) {
+        List<org.springframework.ai.chat.messages.Message> messages = request.getMessages().stream()
+                .map(this::convertMessage)
                 .collect(Collectors.toList());
+
+        LLMConfiguration.OllamaConfig config = configuration.getOllama();
+        OllamaChatOptions options = OllamaChatOptions.builder()
+                .withModel(request.getModel() != null ? request.getModel() : config.getModel())
+                .withTemperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
+                .build();
+
+        return new Prompt(messages, options);
     }
-    
-    private LLMResponse convertResponse(Response<AiMessage> response, String model) {
+
+    private org.springframework.ai.chat.messages.Message convertMessage(Message message) {
+        return switch (message.getRole().toLowerCase()) {
+            case "system" -> new SystemMessage(message.getContent());
+            case "user" -> new UserMessage(message.getContent());
+            case "assistant" -> new AssistantMessage(message.getContent());
+            default -> new UserMessage(message.getContent());
+        };
+    }
+
+    private LLMResponse convertResponse(ChatResponse response, String requestedModel) {
+        var result = response.getResult();
+        var metadata = response.getMetadata();
+
+        String model = metadata.getModel();
+        if (model == null || model.isEmpty()) {
+            model = requestedModel != null ? requestedModel : configuration.getOllama().getModel();
+        }
+
+        TokenUsage tokenUsage = null;
+        if (metadata.getUsage() != null) {
+            var usage = metadata.getUsage();
+            tokenUsage = TokenUsage.builder()
+                    .promptTokens(usage.getPromptTokens().intValue())
+                    .completionTokens(usage.getGenerationTokens().intValue())
+                    .totalTokens(usage.getTotalTokens().intValue())
+                    .build();
+        }
+
         return LLMResponse.builder()
-                .content(response.content().text())
+                .content(result.getOutput().getContent())
                 .model(model)
-                .tokenUsage(TokenUsage.builder()
-                        .promptTokens(response.tokenUsage() != null ? response.tokenUsage().inputTokenCount() : 0)
-                        .completionTokens(response.tokenUsage() != null ? response.tokenUsage().outputTokenCount() : 0)
-                        .totalTokens(response.tokenUsage() != null ? response.tokenUsage().totalTokenCount() : 0)
-                        .build())
-                .finishReason(response.finishReason() != null ? response.finishReason().toString() : null)
+                .tokenUsage(tokenUsage)
+                .finishReason(result.getMetadata().getFinishReason())
                 .build();
     }
 }
-

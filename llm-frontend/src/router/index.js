@@ -39,6 +39,11 @@ const routes = [
     path: '/markdown-to-image',
     name: 'MarkdownToImage',
     component: () => import('../views/MarkdownToImage.vue')
+  },
+  {
+    path: '/note-capture',
+    name: 'NoteCapture',
+    component: () => import('../views/NoteCapture.vue')
   }
 ]
 

@@ -47,6 +47,10 @@
             <el-icon><Picture /></el-icon>
             <span>Markdown 转图片</span>
           </el-menu-item>
+          <el-menu-item index="/note-capture">
+            <el-icon><Notebook /></el-icon>
+            <span>碎片记录</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -90,7 +94,8 @@ const pageTitle = computed(() => {
     '/model-management': '模型管理',
     '/chat': '对话测试',
     '/prompt-comparison': 'Prompt A/B 对比测试',
-    '/markdown-to-image': 'Markdown 转图片'
+    '/markdown-to-image': 'Markdown 转图片',
+    '/note-capture': '碎片记录'
   }
   return titles[route.path] || 'LLM 编排平台'
 })

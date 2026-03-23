@@ -78,7 +78,7 @@ INSERT INTO prompt_template (template_name, category, template_content, descript
 '简单对话模板',
 '["userQuestion"]'
 ),
-('code-review', 'development', 
+('code-review', 'development',
 '你是一位资深的代码审查专家。请审查以下代码并提供改进建议。
 
 编程语言：{language}
@@ -103,3 +103,95 @@ INSERT INTO prompt_template (template_name, category, template_content, descript
 '["language", "code"]'
 );
 
+-- =============================================
+-- 智能碎片记录模块
+-- =============================================
+
+-- 创建记录类目表
+CREATE TABLE IF NOT EXISTS note_category (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    name VARCHAR(50) NOT NULL UNIQUE COMMENT '类目名称',
+    description VARCHAR(200) COMMENT '类目描述',
+    icon VARCHAR(20) COMMENT 'emoji图标',
+    sort_order INT DEFAULT 0 COMMENT '排序顺序',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='记录类目表';
+
+-- 创建记录表
+CREATE TABLE IF NOT EXISTS note (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    category_id BIGINT NOT NULL COMMENT '类目ID',
+    title VARCHAR(200) COMMENT '标题',
+    raw_input TEXT COMMENT '用户原始输入',
+    content TEXT COMMENT '整理后的内容（加密时存密文）',
+    summary VARCHAR(500) COMMENT 'AI生成的一句话摘要',
+    is_encrypted TINYINT NOT NULL DEFAULT 0 COMMENT '是否加密：0-否，1-是',
+    is_voice TINYINT NOT NULL DEFAULT 0 COMMENT '是否来自语音：0-否，1-是',
+    tags VARCHAR(500) COMMENT '标签（JSON数组格式）',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (category_id) REFERENCES note_category(id) ON DELETE CASCADE,
+    INDEX idx_category_id (category_id),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='记录表';
+
+
+-- ==========================================
+-- Agent 运行时表（2026-03-23 新增）
+-- ==========================================
+
+-- Agent 定义表
+CREATE TABLE IF NOT EXISTS agent_definition (
+    id VARCHAR(100) PRIMARY KEY COMMENT 'Agent ID（业务主键）',
+    name VARCHAR(200) NOT NULL COMMENT 'Agent 名称',
+    description VARCHAR(500) COMMENT 'Agent 描述',
+    system_prompt TEXT COMMENT 'System Prompt',
+    tool_ids TEXT COMMENT '工具 ID 列表（JSON 数组）',
+    llm_provider VARCHAR(100) COMMENT '指定 LLM Provider',
+    llm_model VARCHAR(100) COMMENT '指定模型',
+    max_iterations INT DEFAULT 10 COMMENT 'ReAct 最大迭代次数',
+    timeout_seconds INT DEFAULT 120 COMMENT '执行超时秒数',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_agent_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 定义表';
+
+-- Graph 定义表
+CREATE TABLE IF NOT EXISTS graph_definition (
+    id VARCHAR(100) PRIMARY KEY COMMENT 'Graph ID（业务主键）',
+    name VARCHAR(200) NOT NULL COMMENT 'Graph 名称',
+    description VARCHAR(500) COMMENT 'Graph 描述',
+    nodes TEXT COMMENT '节点列表（JSON 数组）',
+    edges TEXT COMMENT '边列表（JSON 数组）',
+    entry_node_id VARCHAR(100) COMMENT '入口节点 ID',
+    enabled BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_graph_enabled (enabled)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Graph 流程定义表';
+
+-- Agent 示例数据：计算器助手
+INSERT IGNORE INTO agent_definition (id, name, description, system_prompt, tool_ids, llm_model, max_iterations)
+VALUES (
+    'calculator-agent',
+    '计算器助手',
+    '能够执行数学计算的智能助手',
+    '你是一个数学助手，擅长帮助用户进行各类数学计算。当用户提出计算需求时，使用 calculator 工具执行计算。',
+    '["calculator"]',
+    'qwen-plus',
+    5
+);
+
+-- Graph 示例数据：碎片记录处理流程
+INSERT IGNORE INTO graph_definition (id, name, description, nodes, edges, entry_node_id)
+VALUES (
+    'note-capture-graph',
+    '碎片记录处理流程',
+    '将用户输入的碎片文字经过 AI 分类后存储到对应类目',
+    '[{"id":"classify","type":"LLM","name":"AI分类","config":{"prompt":"请分析以下用户输入，判断是否敏感（账号密码等），并分类：${rawInput}","model":"qwen-plus"}},{"id":"store","type":"TOOL","name":"存储记录","config":{"tool":"note_store","input":{"content":"${classify_output}"}}}]',
+    '[{"from":"classify","to":"store","condition":null}]',
+    'classify'
+);

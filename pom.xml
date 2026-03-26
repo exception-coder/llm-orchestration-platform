@@ -38,6 +38,7 @@
         <spring-ai-alibaba.version>1.0.0.0</spring-ai-alibaba.version>
         <lombok.version>1.18.30</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <spring-cloud-bootstrap.version>4.1.0</spring-cloud-bootstrap.version>
     </properties>
 
     <dependencyManagement>

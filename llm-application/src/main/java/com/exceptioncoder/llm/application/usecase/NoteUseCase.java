@@ -4,7 +4,6 @@ import com.exceptioncoder.llm.domain.model.Note;
 import com.exceptioncoder.llm.domain.model.NoteClassificationResult;
 import com.exceptioncoder.llm.domain.repository.NoteRepository;
 import com.exceptioncoder.llm.domain.service.NoteClassifier;
-import com.exceptioncoder.llm.infrastructure.note.NoteClassifierService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

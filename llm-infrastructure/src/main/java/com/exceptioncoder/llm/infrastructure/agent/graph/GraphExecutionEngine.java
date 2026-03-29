@@ -1,13 +1,14 @@
 package com.exceptioncoder.llm.infrastructure.agent.graph;
 
+import com.alibaba.cloud.ai.dashscope.api.DashScopeApi;
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.exceptioncoder.llm.domain.model.*;
 import com.exceptioncoder.llm.domain.executor.AgentExecutor;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolExecutor;
 import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.alibaba.AlibabaChatModel;
-import org.springframework.ai.alibaba.AlibabaChatOptions;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -164,16 +165,18 @@ public class GraphExecutionEngine {
         String resolvedPrompt = resolveVariables(prompt, ctx);
 
         LLMConfiguration.AlibabaConfig config = llmConfig.getAlibaba();
-        AlibabaChatOptions options = AlibabaChatOptions.builder()
+        DashScopeChatOptions options = DashScopeChatOptions.builder()
                 .withModel(model != null ? model : config.getModel())
                 .withTemperature(config.getTemperature())
-                .withMaxTokens(config.getMaxTokens())
+                .withMaxToken(config.getMaxTokens())
                 .build();
-
-        AlibabaChatModel chatModel = AlibabaChatModel.builder()
+        DashScopeApi api = new DashScopeApi.Builder()
                 .apiKey(config.getApiKey())
                 .baseUrl(config.getBaseUrl())
-                .options(options)
+                .build();
+        DashScopeChatModel chatModel = DashScopeChatModel.builder()
+                .dashScopeApi(api)
+                .defaultOptions(options)
                 .build();
 
         String systemPrompt = node.getString("system_prompt");
@@ -184,7 +187,7 @@ public class GraphExecutionEngine {
         messages.add(new UserMessage(resolvedPrompt));
 
         var response = chatModel.call(new Prompt(messages));
-        String output = response.getResult().getOutput().getContent();
+        String output = response.getResults().get(0).getOutput().getText();
         return new NodeOutput(output, true, null, null);
     }
 

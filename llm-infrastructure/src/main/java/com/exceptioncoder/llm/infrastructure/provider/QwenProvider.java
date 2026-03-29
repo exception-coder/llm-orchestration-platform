@@ -1,6 +1,7 @@
 package com.exceptioncoder.llm.infrastructure.provider;
 
-import com.alibaba.cloud.ai.model.ChatCompletion;
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.exceptioncoder.llm.domain.model.LLMRequest;
 import com.exceptioncoder.llm.domain.model.LLMResponse;
 import com.exceptioncoder.llm.domain.model.Message;
@@ -14,8 +15,6 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.alibaba.AlibabaChatModel;
-import org.springframework.ai.alibaba.AlibabaChatOptions;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -36,7 +35,7 @@ public class QwenProvider implements LLMProvider {
 
     private final LLMConfiguration configuration;
     private final ObjectMapper objectMapper;
-    private AlibabaChatModel chatModel;
+    private DashScopeChatModel chatModel;
 
     public QwenProvider(LLMConfiguration configuration) {
         this.configuration = configuration;
@@ -46,7 +45,7 @@ public class QwenProvider implements LLMProvider {
     @Override
     public LLMResponse chat(LLMRequest request) {
         try {
-            AlibabaChatModel model = getChatModel();
+            DashScopeChatModel model = getChatModel();
             Prompt prompt = buildPrompt(request);
             ChatResponse response = model.call(prompt);
             return convertResponse(response, request.getModel());
@@ -59,10 +58,10 @@ public class QwenProvider implements LLMProvider {
     @Override
     public Flux<String> chatStream(LLMRequest request) {
         try {
-            AlibabaChatModel model = getChatModel();
+            DashScopeChatModel model = getChatModel();
             Prompt prompt = buildPrompt(request);
             return model.stream(prompt)
-                    .map(response -> response.getResult().getOutput().getContent());
+                    .map(response -> response.getResults().get(0).getOutput().getText());
         } catch (Exception e) {
             log.error("Qwen 流式调用失败", e);
             return Flux.error(new RuntimeException("Qwen 流式调用失败: " + e.getMessage(), e));
@@ -90,18 +89,22 @@ public class QwenProvider implements LLMProvider {
                model.equals("qwen-long");
     }
 
-    private synchronized AlibabaChatModel getChatModel() {
+    private synchronized DashScopeChatModel getChatModel() {
         if (chatModel == null) {
             LLMConfiguration.AlibabaConfig config = configuration.getAlibaba();
-            AlibabaChatOptions options = AlibabaChatOptions.builder()
+            DashScopeChatOptions options = DashScopeChatOptions.builder()
                     .withModel(config.getModel())
                     .withTemperature(config.getTemperature())
-                    .withMaxTokens(config.getMaxTokens())
+                    .withMaxToken(config.getMaxTokens())
                     .build();
-            chatModel = AlibabaChatModel.builder()
-                    .apiKey(config.getApiKey())
-                    .baseUrl(config.getBaseUrl())
-                    .options(options)
+            com.alibaba.cloud.ai.dashscope.api.DashScopeApi api =
+                    new com.alibaba.cloud.ai.dashscope.api.DashScopeApi.Builder()
+                            .apiKey(config.getApiKey())
+                            .baseUrl(config.getBaseUrl())
+                            .build();
+            chatModel = DashScopeChatModel.builder()
+                    .dashScopeApi(api)
+                    .defaultOptions(options)
                     .build();
         }
         return chatModel;
@@ -127,13 +130,13 @@ public class QwenProvider implements LLMProvider {
             optionsMap.put("max_tokens", config.getMaxTokens());
         }
 
-        AlibabaChatOptions options = AlibabaChatOptions.builder()
+        DashScopeChatOptions options = DashScopeChatOptions.builder()
                 .withModel((String) optionsMap.get("model"))
                 .withTemperature((Double) optionsMap.get("temperature"))
-                .withMaxTokens((Integer) optionsMap.get("max_tokens"))
+                .withMaxToken((Integer) optionsMap.get("max_tokens"))
                 .build();
 
-        return new Prompt(messages, options);
+        return new Prompt(messages, (org.springframework.ai.chat.prompt.ChatOptions) options);
     }
 
     private org.springframework.ai.chat.messages.Message convertMessage(Message message) {
@@ -146,7 +149,7 @@ public class QwenProvider implements LLMProvider {
     }
 
     private LLMResponse convertResponse(ChatResponse response, String requestedModel) {
-        var result = response.getResult();
+        org.springframework.ai.chat.model.Generation result = (org.springframework.ai.chat.model.Generation) response.getResult();
         var metadata = response.getMetadata();
 
         String model = metadata.getModel();
@@ -158,14 +161,14 @@ public class QwenProvider implements LLMProvider {
         if (metadata.getUsage() != null) {
             var usage = metadata.getUsage();
             tokenUsage = TokenUsage.builder()
-                    .promptTokens(usage.getPromptTokens().intValue())
-                    .completionTokens(usage.getGenerationTokens().intValue())
-                    .totalTokens(usage.getTotalTokens().intValue())
+                    .promptTokens(usage.getPromptTokens() != null ? usage.getPromptTokens() : 0)
+                    .completionTokens(usage.getCompletionTokens() != null ? usage.getCompletionTokens() : 0)
+                    .totalTokens(usage.getTotalTokens() != null ? usage.getTotalTokens() : 0)
                     .build();
         }
 
         return LLMResponse.builder()
-                .content(result.getOutput().getContent())
+                .content(response.getResults().get(0).getOutput().getText())
                 .model(model)
                 .tokenUsage(tokenUsage)
                 .finishReason(result.getMetadata().getFinishReason())

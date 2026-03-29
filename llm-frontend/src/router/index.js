@@ -41,6 +41,16 @@ const routes = [
     component: () => import('../views/MarkdownToImage.vue')
   },
   {
+    path: '/doc-viewer',
+    name: 'DocViewer',
+    component: () => import('../views/DocViewer.vue')
+  },
+  {
+    path: '/secretary',
+    name: 'Secretary',
+    component: () => import('../views/Secretary.vue')
+  },
+  {
     path: '/note-capture',
     name: 'NoteCapture',
     component: () => import('../views/NoteCapture.vue')

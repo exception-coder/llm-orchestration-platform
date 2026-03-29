@@ -80,7 +80,11 @@ llm-api → llm-application → llm-domain ← llm-infrastructure
 
 ## 开发日志
 
-**每次代码变更必须追加** `docs/dev-log.md`，包含：日期、任务描述、变更文件、关键设计决策。
+**每次代码变更必须追加**到对应周的 `docs/dev/dev-log-YYYY-WNN.md`（ISO 8601 周次），包含：日期、任务描述、变更文件、关键设计决策。
+
+- 索引文件：`docs/dev/dev-log.md`（列出各周文件链接，勿直接写内容）
+- 当周文件不存在时新建，例如 `docs/dev/dev-log-2026-W15.md`，并在索引中补一行
+- 周次计算：Python `date.isocalendar()` 或 `date +%G-W%V`
 
 ## 配置
 

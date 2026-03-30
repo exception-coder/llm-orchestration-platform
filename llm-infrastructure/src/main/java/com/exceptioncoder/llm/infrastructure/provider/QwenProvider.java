@@ -15,7 +15,6 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-@Primary
 public class QwenProvider implements LLMProvider {
 
     private final LLMConfiguration configuration;

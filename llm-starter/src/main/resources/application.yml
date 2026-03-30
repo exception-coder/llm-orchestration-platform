@@ -44,3 +44,18 @@ llm:
       required-properties:
         - spring.datasource.url
         - spring.ai.alibaba.api-key
+
+# 文档浏览器配置
+doc-viewer:
+  docs-path: classpath:docs/     # 文档目录路径
+  search-enabled: true            # 是否启用 AI 检索（需 Qdrant 启动）
+  search-top-k: 5                 # 默认返回数量
+
+# 秘书工具插拔配置
+secretary:
+  tools:
+    schedule: true    # 日程管理工具
+    todo: true        # 待办管理工具
+    note-search: true # 笔记检索工具（复用 NoteSearchTool）
+    rag-search: false # 知识库 RAG（需 Qdrant 启动）
+    web-search: false # 网络搜索（需配置搜索 API Key）

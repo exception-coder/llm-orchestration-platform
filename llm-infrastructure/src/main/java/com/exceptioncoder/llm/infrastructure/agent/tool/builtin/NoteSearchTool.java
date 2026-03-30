@@ -37,9 +37,13 @@ public class NoteSearchTool {
             if (keyword != null && !keyword.isBlank()) {
                 notes = noteRepository.search(keyword);
             } else if (category != null && !category.isBlank()) {
-                notes = noteRepository.findByCategoryNameOrderByCreatedAtDesc(category);
+                notes = noteRepository.findAllOrderByCreatedAtDesc().stream()
+                        .filter(n -> category.equals(n.getCategoryName()))
+                        .collect(Collectors.toList());
             } else {
-                notes = noteRepository.findRecent(20);
+                notes = noteRepository.findAllOrderByCreatedAtDesc().stream()
+                        .limit(20)
+                        .collect(Collectors.toList());
             }
 
             notes = notes.stream()

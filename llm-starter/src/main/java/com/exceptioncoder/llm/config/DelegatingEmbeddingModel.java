@@ -7,7 +7,6 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.ollama.OllamaEmbeddingModel;
-import org.springframework.ai.openai.OpenAiEmbeddingModel;
 
 import java.util.HashMap;
 import java.util.List;
@@ -79,26 +78,16 @@ public class DelegatingEmbeddingModel implements EmbeddingModel {
      * @param ollamaEmbeddingModel Ollama Embedding 模型（可选）
      */
     public DelegatingEmbeddingModel(
-            OpenAiEmbeddingModel openAiEmbeddingModel,
             OllamaEmbeddingModel ollamaEmbeddingModel) {
-        
-        // 注册 OpenAI 模型
-        if (openAiEmbeddingModel != null) {
-            modelRegistry.put("openai", openAiEmbeddingModel);
-            log.info("注册 OpenAI EmbeddingModel");
-        }
-        
+
         // 注册 Ollama 模型
         if (ollamaEmbeddingModel != null) {
             modelRegistry.put("ollama", ollamaEmbeddingModel);
             log.info("注册 Ollama EmbeddingModel");
         }
-        
-        // 设置默认模型（优先 OpenAI）
-        if (openAiEmbeddingModel != null) {
-            this.defaultModel = openAiEmbeddingModel;
-            log.info("默认 EmbeddingModel: OpenAI");
-        } else if (ollamaEmbeddingModel != null) {
+
+        // 设置默认模型
+        if (ollamaEmbeddingModel != null) {
             this.defaultModel = ollamaEmbeddingModel;
             log.info("默认 EmbeddingModel: Ollama");
         } else {

@@ -36,7 +36,7 @@ public class ToolScanner implements ApplicationListener<ApplicationReadyEvent> {
 
     private void scanAndRegister(ApplicationReadyEvent event) {
         var context = event.getApplicationContext();
-        Map<String, Object> beans = context.getBeansWithAnnotation(org.springframework.stereotype.Component.class);
+        Map<String, Object> beans = context.getBeansOfType(Object.class);
 
         int registeredCount = 0;
         for (Map.Entry<String, Object> entry : beans.entrySet()) {

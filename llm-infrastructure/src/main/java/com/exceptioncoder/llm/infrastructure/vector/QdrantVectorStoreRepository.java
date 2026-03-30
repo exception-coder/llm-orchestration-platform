@@ -48,16 +48,16 @@ public class QdrantVectorStoreRepository implements VectorStoreRepository {
     @Override
     public VectorSearchResult search(VectorSearchRequest request) {
         // 构建 Spring AI 搜索请求
-        SearchRequest searchRequest = SearchRequest.query(request.getQueryText())
-            .withTopK(request.getTopK());
-        
+        SearchRequest searchRequest = SearchRequest.builder().query(request.getQueryText())
+            .topK(request.getTopK()).build();
+
         // 添加过滤条件
         if (request.getFilters() != null && !request.getFilters().isEmpty()) {
             // Spring AI 使用 Filter.Expression 进行过滤
             String filterExpression = buildFilterExpression(request.getFilters());
-            searchRequest = SearchRequest.query(request.getQueryText())
-                .withTopK(request.getTopK())
-                .withFilterExpression(filterExpression);
+            searchRequest = SearchRequest.builder().query(request.getQueryText())
+                .topK(request.getTopK())
+                .filterExpression(filterExpression).build();
         }
         
         // 执行搜索
@@ -81,7 +81,7 @@ public class QdrantVectorStoreRepository implements VectorStoreRepository {
     public boolean isHealthy() {
         try {
             // 尝试执行一个简单的搜索来检查连接
-            vectorStore.similaritySearch(SearchRequest.query("health_check").withTopK(1));
+            vectorStore.similaritySearch(SearchRequest.builder().query("health_check").topK(1).build());
             return true;
         } catch (Exception e) {
             return false;

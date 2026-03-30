@@ -100,4 +100,17 @@ export const noteAPI = {
   deleteCategory: (id) => request.delete(`/notes/categories/${id}`)
 }
 
+export const docViewerAPI = {
+  getTree: () => request.get('/docs/tree'),
+  getContent: (path) => request.get('/docs/content', { params: { path } }),
+  search: (keyword, topK = 5) => request.get('/docs/search', { params: { keyword, topK } }),
+  indexDocs: () => request.post('/docs/index')
+}
 
+export const secretaryAPI = {
+  chat: (data) => request.post('/secretary/chat', data),
+  getTools: () => request.get('/secretary/tools'),
+  getMemory: () => request.get('/secretary/memory'),
+  saveMemory: (type, content) => request.post('/secretary/memory', { type, content }),
+  clearMemory: () => request.delete('/secretary/memory')
+}

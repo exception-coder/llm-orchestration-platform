@@ -32,6 +32,18 @@ spring:
         use-tls: false
         collection-name: ${QDRANT_COLLECTION:job_postings_dev}
         initialize-schema: true
+        enabled: true
+
+    # 文档向量库配置（独立 collection）
+    # 注意：Spring AI 1.x 可能不支持多 VectorStore Bean，
+    # 如遇冲突，请在 DocVectorStoreConfig 中加 @ConditionalOnBean 检查
+    vectorstore-qdrant-docs:
+      host: ${QDRANT_HOST:localhost}
+      port: ${QDRANT_PORT:6334}
+      api-key: ${QDRANT_API_KEY:}
+      use-tls: false
+      collection-name-docs: ${QDRANT_COLLECTION_DOCS:docs_vectors}
+      initialize-schema: true
 
 # LLM 业务配置
 llm:

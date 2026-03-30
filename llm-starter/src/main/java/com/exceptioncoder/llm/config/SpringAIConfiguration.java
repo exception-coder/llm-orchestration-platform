@@ -2,9 +2,7 @@ package com.exceptioncoder.llm.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaEmbeddingModel;
-import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,13 +54,11 @@ public class SpringAIConfiguration {
     @Bean
     @Primary
     public DelegatingEmbeddingModel delegatingEmbeddingModel(
-            @Autowired(required = false) OpenAiEmbeddingModel openAiEmbeddingModel,
             @Autowired(required = false) OllamaEmbeddingModel ollamaEmbeddingModel) {
         
         log.info("创建 DelegatingEmbeddingModel 代理");
         
         DelegatingEmbeddingModel delegatingModel = new DelegatingEmbeddingModel(
-            openAiEmbeddingModel, 
             ollamaEmbeddingModel
         );
         

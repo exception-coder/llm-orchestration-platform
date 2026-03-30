@@ -1,11 +1,12 @@
 package com.exceptioncoder.llm.infrastructure.note;
 
-import com.exceptioncoder.llm.application.service.LLMOrchestrationService;
 import com.exceptioncoder.llm.domain.model.LLMRequest;
 import com.exceptioncoder.llm.domain.model.LLMResponse;
+import com.exceptioncoder.llm.domain.model.Message;
 import com.exceptioncoder.llm.domain.model.NoteCategory;
 import com.exceptioncoder.llm.domain.model.NoteClassificationResult;
 import com.exceptioncoder.llm.domain.repository.NoteCategoryRepository;
+import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.domain.service.NoteClassifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,15 +24,15 @@ import java.util.stream.Collectors;
 @Service
 public class NoteClassifierService implements NoteClassifier {
 
-    private final LLMOrchestrationService orchestrationService;
+    private final LLMProvider llmProvider;
     private final NoteCategoryRepository categoryRepository;
     private final ObjectMapper objectMapper;
 
     public NoteClassifierService(
-            LLMOrchestrationService orchestrationService,
+            LLMProvider llmProvider,
             NoteCategoryRepository categoryRepository,
             ObjectMapper objectMapper) {
-        this.orchestrationService = orchestrationService;
+        this.llmProvider = llmProvider;
         this.categoryRepository = categoryRepository;
         this.objectMapper = objectMapper;
     }
@@ -47,16 +48,17 @@ public class NoteClassifierService implements NoteClassifier {
                         .map(c -> String.format("【%s】%s", c.getName(), c.getDescription() != null ? c.getDescription() : ""))
                         .collect(Collectors.joining("\n"));
 
-        String prompt = buildPrompt(rawText, categoryList);
+        String promptText = buildPrompt(rawText, categoryList);
 
         LLMRequest request = LLMRequest.builder()
-                .prompt(prompt)
+                .prompt(promptText)
+                .messages(List.of(Message.builder().role("user").content(promptText).build()))
                 .temperature(0.3)
                 .maxTokens(2000)
                 .build();
 
         log.info("开始对输入内容进行分类，长度: {} 字", rawText.length());
-        LLMResponse response = orchestrationService.chat(request);
+        LLMResponse response = llmProvider.chat(request);
 
         return parseClassificationResult(response.getContent());
     }

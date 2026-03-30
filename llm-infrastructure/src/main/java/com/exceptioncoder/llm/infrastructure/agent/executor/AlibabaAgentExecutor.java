@@ -1,6 +1,8 @@
 package com.exceptioncoder.llm.infrastructure.agent.executor;
 
-import com.alibaba.cloud.ai.model.ChatCompletion;
+import com.alibaba.cloud.ai.dashscope.api.DashScopeApi;
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.exceptioncoder.llm.domain.model.*;
 import com.exceptioncoder.llm.domain.executor.AgentExecutor;
 import com.exceptioncoder.llm.domain.repository.AgentDefinitionRepository;
@@ -9,8 +11,6 @@ import com.exceptioncoder.llm.infrastructure.agent.tool.ToolRegistryImpl;
 import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.alibaba.AlibabaChatModel;
-import org.springframework.ai.alibaba.AlibabaChatOptions;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -69,7 +69,7 @@ public class AlibabaAgentExecutor implements AgentExecutor {
         List<ToolCall> toolCalls = new ArrayList<>();
         List<String> thoughtHistory = new ArrayList<>();
 
-        AlibabaChatModel chatModel = buildChatModel(agent);
+        DashScopeChatModel chatModel = buildChatModel(agent);
         List<org.springframework.ai.chat.messages.Message> messages = buildInitialMessages(agent, request);
 
         int maxIterations = agent.maxIterations();
@@ -86,7 +86,7 @@ public class AlibabaAgentExecutor implements AgentExecutor {
                     break;
                 }
 
-                String content = response.getResult().getOutput().getContent();
+                String content = response.getResults().get(0).getOutput().getText();
 
                 // 尝试解析工具调用
                 ToolCallResult toolCallResult = parseAndExecuteTool(content, agent, toolExecutor, toolCalls);
@@ -149,18 +149,21 @@ public class AlibabaAgentExecutor implements AgentExecutor {
         return agentRepository.existsById(agentId);
     }
 
-    private AlibabaChatModel buildChatModel(AgentDefinition agent) {
+    private DashScopeChatModel buildChatModel(AgentDefinition agent) {
         LLMConfiguration.AlibabaConfig config = llmConfig.getAlibaba();
         String model = agent.llmModel() != null ? agent.llmModel() : config.getModel();
-        AlibabaChatOptions options = AlibabaChatOptions.builder()
+        DashScopeChatOptions options = DashScopeChatOptions.builder()
                 .withModel(model)
                 .withTemperature(config.getTemperature())
-                .withMaxTokens(config.getMaxTokens())
+                .withMaxToken(config.getMaxTokens())
                 .build();
-        return AlibabaChatModel.builder()
+        DashScopeApi api = new DashScopeApi.Builder()
                 .apiKey(config.getApiKey())
                 .baseUrl(config.getBaseUrl())
-                .options(options)
+                .build();
+        return DashScopeChatModel.builder()
+                .dashScopeApi(api)
+                .defaultOptions(options)
                 .build();
     }
 

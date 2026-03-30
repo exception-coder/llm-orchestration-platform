@@ -13,7 +13,8 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.OllamaChatOptions;
+import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -54,7 +55,7 @@ public class OllamaProvider implements LLMProvider {
             OllamaChatModel model = getChatModel(request);
             Prompt prompt = buildPrompt(request);
             return model.stream(prompt)
-                    .map(response -> response.getResult().getOutput().getContent());
+                    .map(response -> response.getResults().get(0).getOutput().getText());
         } catch (Exception e) {
             log.error("Ollama 流式调用失败", e);
             return Flux.error(new RuntimeException("Ollama 流式调用失败: " + e.getMessage(), e));
@@ -83,13 +84,13 @@ public class OllamaProvider implements LLMProvider {
     private synchronized OllamaChatModel getChatModel(LLMRequest request) {
         if (chatModel == null) {
             LLMConfiguration.OllamaConfig config = configuration.getOllama();
-            OllamaChatOptions options = OllamaChatOptions.builder()
+            OllamaOptions options = OllamaOptions.builder()
                     .withModel(request.getModel() != null ? request.getModel() : config.getModel())
                     .withTemperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
                     .build();
             chatModel = OllamaChatModel.builder()
-                    .baseUrl(config.getBaseUrl())
-                    .defaultOptions(options)
+                    .withOllamaApi(new OllamaApi(config.getBaseUrl()))
+                    .withDefaultOptions(options)
                     .build();
         }
         return chatModel;
@@ -101,12 +102,12 @@ public class OllamaProvider implements LLMProvider {
                 .collect(Collectors.toList());
 
         LLMConfiguration.OllamaConfig config = configuration.getOllama();
-        OllamaChatOptions options = OllamaChatOptions.builder()
+        OllamaOptions options = OllamaOptions.builder()
                 .withModel(request.getModel() != null ? request.getModel() : config.getModel())
                 .withTemperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
                 .build();
 
-        return new Prompt(messages, options);
+        return new Prompt(messages, (org.springframework.ai.chat.prompt.ChatOptions) options);
     }
 
     private org.springframework.ai.chat.messages.Message convertMessage(Message message) {
@@ -119,7 +120,7 @@ public class OllamaProvider implements LLMProvider {
     }
 
     private LLMResponse convertResponse(ChatResponse response, String requestedModel) {
-        var result = response.getResult();
+        org.springframework.ai.chat.model.Generation result = (org.springframework.ai.chat.model.Generation) response.getResult();
         var metadata = response.getMetadata();
 
         String model = metadata.getModel();
@@ -131,14 +132,14 @@ public class OllamaProvider implements LLMProvider {
         if (metadata.getUsage() != null) {
             var usage = metadata.getUsage();
             tokenUsage = TokenUsage.builder()
-                    .promptTokens(usage.getPromptTokens().intValue())
-                    .completionTokens(usage.getGenerationTokens().intValue())
-                    .totalTokens(usage.getTotalTokens().intValue())
+                    .promptTokens(usage.getPromptTokens() != null ? usage.getPromptTokens() : 0)
+                    .completionTokens(usage.getCompletionTokens() != null ? usage.getCompletionTokens() : 0)
+                    .totalTokens(usage.getTotalTokens() != null ? usage.getTotalTokens() : 0)
                     .build();
         }
 
         return LLMResponse.builder()
-                .content(result.getOutput().getContent())
+                .content(response.getResults().get(0).getOutput().getText())
                 .model(model)
                 .tokenUsage(tokenUsage)
                 .finishReason(result.getMetadata().getFinishReason())

@@ -195,3 +195,54 @@ VALUES (
     '[{"from":"classify","to":"store","condition":null}]',
     'classify'
 );
+
+-- 秘书记忆表
+CREATE TABLE IF NOT EXISTS secretary_memory (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    user_id VARCHAR(100) NOT NULL COMMENT '用户ID',
+    type VARCHAR(50) NOT NULL COMMENT '记忆类型：PREFERENCE/SUMMARY/PROFILE',
+    content TEXT NOT NULL COMMENT '记忆内容',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_secretary_memory_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秘书长期记忆';
+
+-- 秘书日程表
+CREATE TABLE IF NOT EXISTS secretary_schedule (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    user_id VARCHAR(100) NOT NULL COMMENT '用户ID',
+    title VARCHAR(200) NOT NULL COMMENT '日程标题',
+    description VARCHAR(500) COMMENT '日程描述',
+    start_time DATETIME COMMENT '开始时间',
+    end_time DATETIME COMMENT '结束时间',
+    reminder TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否提醒',
+    done TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否完成',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_secretary_schedule_user (user_id),
+    INDEX idx_secretary_schedule_time (start_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秘书日程';
+
+-- 秘书待办表
+CREATE TABLE IF NOT EXISTS secretary_todo (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    user_id VARCHAR(100) NOT NULL COMMENT '用户ID',
+    title VARCHAR(200) NOT NULL COMMENT '待办标题',
+    priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM' COMMENT '优先级：LOW/MEDIUM/HIGH/URGENT',
+    due_date DATE COMMENT '截止日期',
+    done TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否完成',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_secretary_todo_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秘书待办';
+
+-- 文档目录结构版本表
+CREATE TABLE IF NOT EXISTS doc_structure_version (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+    version INT NOT NULL UNIQUE COMMENT '版本号，从1开始单调递增',
+    structure LONGTEXT NOT NULL COMMENT '目录结构 JSON（DocTreeNode[] 数组）',
+    diff_summary VARCHAR(1000) COMMENT '与上一版本的差异描述（由LLM生成）',
+    readme_hash VARCHAR(64) COMMENT 'docs/README.md 内容的 SHA-256 hash',
+    is_active TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否为当前生效版本，任意时刻只有一条为1',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_dsv_active (is_active),
+    INDEX idx_dsv_version (version)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文档目录结构版本';

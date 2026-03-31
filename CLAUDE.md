@@ -78,6 +78,10 @@ llm-api → llm-application → llm-domain ← llm-infrastructure
 
 使用 SLF4J `LoggerFactory.getLogger()`，禁止 `System.out.println`。
 
+## 开发流程强制规定
+
+每次功能讨论结束、进入实现前，必须先调用 `team-standards:design-doc-required` skill，检查或创建设计文档，然后再进入实现计划。
+
 ## 开发日志
 
 **每次代码变更必须追加**到对应周的 `docs/dev/dev-log-YYYY-WNN.md`（ISO 8601 周次），包含：日期、任务描述、变更文件、关键设计决策。

@@ -6,11 +6,27 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * 各角色 Agent 的配置
+ * 开发计划各角色 Agent 的静态配置中心。
+ *
+ * <p>属于 Infrastructure层 devplan/agent 模块，集中管理每个 {@link AgentRole}
+ * 对应的 Agent ID（用于路由到具体的 Agent 实例）和 System Prompt（定义 Agent 的行为边界）。
+ *
+ * <p><b>设计思路：</b>将 Agent 配置从路由逻辑中抽离，实现配置与行为分离。
+ * 当前使用静态 Map 硬编码，后续可升级为从数据库或配置中心动态加载。
+ *
+ * <p><b>协作关系：</b>被 {@link DevPlanAgentRouterImpl} 在路由时调用，
+ * 获取目标 Agent 的 ID 和 System Prompt。
+ *
+ * @author zhangkai
+ * @since 2026-04-06
  */
 @Component
 public class DevPlanAgentConfig {
 
+    /**
+     * 角色 → Agent ID 映射表。
+     * Agent ID 用于在 AgentExecutor 中定位具体的 Agent 实例。
+     */
     private static final Map<AgentRole, String> AGENT_IDS = Map.of(
             AgentRole.CODE_AWARENESS, "devplan-code-awareness",
             AgentRole.REQUIREMENT_ANALYZER, "devplan-requirement-analyzer",
@@ -18,6 +34,11 @@ public class DevPlanAgentConfig {
             AgentRole.PLAN_REVIEWER, "devplan-plan-reviewer"
     );
 
+    /**
+     * 角色 → System Prompt 映射表。
+     * System Prompt 定义了每个 Agent 的职责边界、输出格式要求和行为约束，
+     * 是控制 Agent 行为的核心手段。
+     */
     private static final Map<AgentRole, String> SYSTEM_PROMPTS = Map.of(
             AgentRole.CODE_AWARENESS, """
                     你是项目代码分析专家。你的任务是扫描项目结构、索引代码、提取架构拓扑。
@@ -43,10 +64,22 @@ public class DevPlanAgentConfig {
                     """
     );
 
+    /**
+     * 获取指定角色对应的 Agent ID。
+     *
+     * @param role Agent 角色枚举
+     * @return 对应的 Agent ID 字符串，用于 AgentExecutor 定位 Agent 实例
+     */
     public String getAgentId(AgentRole role) {
         return AGENT_IDS.get(role);
     }
 
+    /**
+     * 获取指定角色对应的 System Prompt。
+     *
+     * @param role Agent 角色枚举
+     * @return 对应的 System Prompt 文本，定义 Agent 的行为边界和输出格式
+     */
     public String getSystemPrompt(AgentRole role) {
         return SYSTEM_PROMPTS.get(role);
     }

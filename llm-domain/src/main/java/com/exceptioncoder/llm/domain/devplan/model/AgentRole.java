@@ -1,8 +1,14 @@
 package com.exceptioncoder.llm.domain.devplan.model;
 
 /**
- * Agent 角色枚举
- * 定义开发方案生成流程中各角色 Agent 的职责
+ * Agent 角色枚举 -- 定义开发方案生成流程中各角色 Agent 的职责。
+ *
+ * <p>属于 Domain 层 devplan 模块的核心值对象，用于在 Graph 编排中标识每个 Node
+ * 应由哪个 Agent 承担执行。角色划分遵循"单一职责"原则：每个 Agent 仅关注
+ * 流水线中的一个阶段，便于独立演进与替换。</p>
+ *
+ * @author zhangkai
+ * @since 2026-04-06
  */
 public enum AgentRole {
 

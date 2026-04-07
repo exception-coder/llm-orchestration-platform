@@ -38,3 +38,10 @@
 - 摘要：基于组件全景图 v4 架构（L4 可控多 Agent 系统），引入控制平面 + StateGraph 流程编排 + 4 角色 Agent 协作 + Tool 标准协议 + 三级记忆体系 + 全链路 Trace
 - 大纲：背景与目标 / 四角色协作模型 / StateGraph 流程设计 / 接口设计 / 类设计（55 个新建类 + 8 个复用类）/ 数据库设计（4 表）/ 核心业务规则 / v4 全景图映射 / 架构成熟度对标 / Prompt 模板
 - 历史版本：`代码感知智能开发方案智能体-20260406-v1.md`（基于 v3 全景图，单 Agent 四阶段串行）
+
+### Tool 层与 Agent 初始化器实现（子模块）
+- 文件：`代码感知智能开发方案智能体/Tool层与Agent初始化器实现-20260407-v2.md`（最新）
+- 摘要：核心原则"Tool=眼睛/Agent=大脑"，CODE_AWARENESS 拆为 4 个机械提取器（ProjectScan/DependencyAnalysis/CodeStructure/ConfigScan）+ 1 个向量索引器，共 8 Tool + DevPlanToolRegistry + DevPlanAgentInitializer + Trace
+- 大纲：背景与 v1 问题 / Tool-Agent 职责分离原则 / 项目画像 7 维度 / 8 Tool 详细设计 / DevPlanToolRegistry / DevPlanAgentInitializer / Trace / 类清单 / 异常处理
+- 归属原因：v2 总体架构中 Tool/Trace/Initializer 的具体实现设计
+- 历史版本：`Tool层与Agent初始化器实现-20260407-v1.md`（Tool 混淆了提取与理解职责）

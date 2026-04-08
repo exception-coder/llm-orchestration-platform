@@ -40,8 +40,36 @@
 - 历史版本：`代码感知智能开发方案智能体-20260406-v1.md`（基于 v3 全景图，单 Agent 四阶段串行）
 
 ### Tool 层与 Agent 初始化器实现（子模块）
-- 文件：`代码感知智能开发方案智能体/Tool层与Agent初始化器实现-20260407-v2.md`（最新）
-- 摘要：核心原则"Tool=眼睛/Agent=大脑"，CODE_AWARENESS 拆为 4 个机械提取器（ProjectScan/DependencyAnalysis/CodeStructure/ConfigScan）+ 1 个向量索引器，共 8 Tool + DevPlanToolRegistry + DevPlanAgentInitializer + Trace
-- 大纲：背景与 v1 问题 / Tool-Agent 职责分离原则 / 项目画像 7 维度 / 8 Tool 详细设计 / DevPlanToolRegistry / DevPlanAgentInitializer / Trace / 类清单 / 异常处理
-- 归属原因：v2 总体架构中 Tool/Trace/Initializer 的具体实现设计
+- 文件：`代码感知智能开发方案智能体/Tool层与Agent初始化器实现/Tool层与Agent初始化器实现-20260407-v2.md`（最新）
+- 摘要：8 个 @Tool 实现（4 元数据提取器 + 1 向量索引器 + 2 检索/读取器 + 1 模板器）+ DevPlanToolRegistry 角色路由 + DevPlanAgentInitializer 启动注册 + Trace 全链路追踪
+- 大纲：背景与 v1 问题 / Tool 职责分离原则 / 8 Tool 详细设计 / DevPlanToolRegistry / DevPlanAgentInitializer / Trace / 类清单 / 异常处理
+- 归属原因：v2 总体架构中 Tool/Trace/Initializer 的基础设施实现设计
 - 历史版本：`Tool层与Agent初始化器实现-20260407-v1.md`（Tool 混淆了提取与理解职责）
+
+### 代码感知智能体实现（子模块）
+
+- 文件：`代码感知智能开发方案智能体/代码感知智能体实现/代码感知智能体实现-20260408-v1.md`
+- 摘要：CODE_AWARENESS Agent 完整设计 — 5 Tool ReAct 编排 + ProjectProfile 7 维度生成 + ArchTopology 输出，模型选择 qwen-max
+- 大纲：技术选型决策 / 角色定位 / ReAct 执行流程 / 工具集 / System Prompt / 记忆体系 / State 交互 / Agent 注册 / 类清单 / 业务规则 / 异常处理
+- 归属原因：StateGraph 第一站 ScanNode 的 Agent 实现，输出供后续所有 Agent 消费
+
+### 需求分析智能体实现（子模块）
+
+- 文件：`代码感知智能开发方案智能体/需求分析智能体实现/需求分析智能体实现-20260408-v1.md`
+- 摘要：REQUIREMENT_ANALYZER Agent 完整设计 — CodeSearchTool + FileReadTool ReAct 编排 + ImpactAnalysis JSON 输出，模型选择 qwen-plus
+- 大纲：技术选型决策 / 角色定位 / ReAct 执行流程 / 工具集 / System Prompt / 记忆体系 / State 交互 / Agent 注册 / 类清单 / 业务规则 / 异常处理
+- 归属原因：StateGraph 第二站 AnalyzeNode 的 Agent 实现
+
+### 方案生成智能体实现（子模块）
+
+- 文件：`代码感知智能开发方案智能体/方案生成智能体实现/方案生成智能体实现-20260408-v1.md`
+- 摘要：SOLUTION_ARCHITECT Agent 完整设计 — CodeSearchTool + TemplateRenderTool 编排 + 设计文档 Markdown 输出 + 修正循环机制
+- 大纲：技术选型决策 / 角色定位 / 执行流程 / 工具集 / 模板系统 / System Prompt / 修正循环 / State 交互 / Agent 注册 / 类清单
+- 归属原因：StateGraph 第三站 DesignNode 的 Agent 实现
+
+### 方案审查智能体实现（子模块）
+
+- 文件：`代码感知智能开发方案智能体/方案审查智能体实现/方案审查智能体实现-20260408-v1.md`
+- 摘要：PLAN_REVIEWER Agent 完整设计 — 无外部 Tool，使用 PlanSensor 传感器链（计算型 + 推理型 + 聚合型）进行方案评审
+- 大纲：技术选型决策 / Tool vs Sensor 对比 / 角色定位 / Sensor Chain 设计 / System Prompt / State 交互 / Agent 注册 / 类清单
+- 归属原因：StateGraph 第四站 ReviewNode 的 Agent 实现

@@ -2,16 +2,17 @@
 
 > 本文档由完整设计文档精简而来，供 AI 辅助编码时使用。
 > 对应完整文档：`Tool层与Agent初始化器实现-20260407-v2.md`
-> 父级设计文档：`代码感知智能开发方案智能体-20260406-v2-coding.md`
+> 父级设计文档：`整体方案设计-20260406-v2-coding.md`
 
 ---
 
 ## 变更记录
 
-| 版本 | 日期 | 变更内容摘要 |
-|------|------|--------------|
-| v1 | 2026-04-07 | 初始版本 |
-| v2 | 2026-04-07 | 重构：Tool 只做机械提取，新增 DependencyAnalysisTool/CodeStructureAnalysisTool/ConfigScanTool，ArchTopologyTool 合并进 CodeStructureAnalysisTool |
+| 版本 | 日期       | 变更内容摘要 |
+|------|------------|--------------|
+| v1   | 2026-04-07 | 初始版本 |
+| v2   | 2026-04-07 | 重构：Tool 只做机械提取，新增 DependencyAnalysisTool/CodeStructureAnalysisTool/ConfigScanTool，ArchTopologyTool 合并进 CodeStructureAnalysisTool |
+| v2.1 | 2026-04-08 | CODE_AWARENESS Agent 设计拆分到 `代码感知智能体实现/`，本文档聚焦 Tool/Trace/Initializer |
 
 ---
 
@@ -46,7 +47,7 @@
 ### 关键方法签名（全类名）
 
 ```java
-// ===== CODE_AWARENESS 工具（机械提取器） =====
+// ===== 元数据提取器 + 向量索引器 =====
 
 // ProjectScanTool — 目录结构、模块列表、文件统计
 @Tool(name = "devplan_project_scan", description = "扫描项目目录结构和Maven模块列表")
@@ -79,7 +80,7 @@ com.exceptioncoder.llm.infrastructure.devplan.tool.CodeIndexTool#indexIfNeeded(
     @ToolParam(value = "forceReindex", required = false, defaultValue = "false") String forceReindex
 ): String  // JSON: {collectionName, docCount, status, skipped}
 
-// ===== REQUIREMENT_ANALYZER / SOLUTION_ARCHITECT 工具 =====
+// ===== 检索 / 读取 / 渲染工具 =====
 
 // CodeSearchTool — 语义搜索
 @Tool(name = "devplan_code_search", description = "语义搜索已索引的代码库")
@@ -122,13 +123,13 @@ com.exceptioncoder.llm.infrastructure.devplan.trace.DevPlanTraceRecorder#getSpan
 
 | 全类名 | 操作 | 说明 |
 |--------|------|------|
-| **Tool — CODE_AWARENESS** | | |
+| **Tool — 元数据提取器 + 向量索引器** | | |
 | `c.e.l.infrastructure.devplan.tool.ProjectScanTool` | 新建 | @Tool @Component, 目录结构+模块+统计 |
 | `c.e.l.infrastructure.devplan.tool.DependencyAnalysisTool` | 新建 | @Tool @Component, pom.xml→依赖清单 |
 | `c.e.l.infrastructure.devplan.tool.CodeStructureAnalysisTool` | 新建 | @Tool @Component, 注解扫描+层依赖+违规检测 |
 | `c.e.l.infrastructure.devplan.tool.ConfigScanTool` | 新建 | @Tool @Component, 配置提取+脱敏 |
 | `c.e.l.infrastructure.devplan.tool.CodeIndexTool` | 新建 | @Tool @Component, Qdrant 向量索引 |
-| **Tool — REQUIREMENT_ANALYZER / SOLUTION_ARCHITECT** | | |
+| **Tool — 检索 / 读取 / 渲染** | | |
 | `c.e.l.infrastructure.devplan.tool.CodeSearchTool` | 新建 | @Tool @Component, VectorStore 语义搜索 |
 | `c.e.l.infrastructure.devplan.tool.FileReadTool` | 新建 | @Tool @Component, 安全文件读取 |
 | `c.e.l.infrastructure.devplan.tool.TemplateRenderTool` | 新建 | @Tool @Component, 模板渲染 |

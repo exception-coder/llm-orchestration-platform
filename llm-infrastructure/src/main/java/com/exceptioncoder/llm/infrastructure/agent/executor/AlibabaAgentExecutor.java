@@ -82,14 +82,15 @@ public class AlibabaAgentExecutor implements AgentExecutor {
                 Prompt prompt = new Prompt(messages);
                 ChatResponse response = chatModel.call(prompt);
 
-                if (response == null || response.getResult() == null) {
-                    break;
-                }
+                response.getResult();
 
                 String content = response.getResults().get(0).getOutput().getText();
 
                 // 尝试解析工具调用
-                ToolCallResult toolCallResult = parseAndExecuteTool(content, agent, toolExecutor, toolCalls);
+                ToolCallResult toolCallResult = null;
+                if (content != null) {
+                    toolCallResult = parseAndExecuteTool(content, agent, toolExecutor, toolCalls);
+                }
 
                 if (toolCallResult != null) {
                     // 有工具调用，追加 Observation
@@ -98,7 +99,9 @@ public class AlibabaAgentExecutor implements AgentExecutor {
                     messages.add(new UserMessage("观察结果: " + toolCallResult.observation));
                 } else {
                     // 无工具调用，LLM 直接回答
-                    messages.add(new AssistantMessage(content));
+                    if (content != null) {
+                        messages.add(new AssistantMessage(content));
+                    }
                     finalOutput = content;
                     finished = true;
                 }

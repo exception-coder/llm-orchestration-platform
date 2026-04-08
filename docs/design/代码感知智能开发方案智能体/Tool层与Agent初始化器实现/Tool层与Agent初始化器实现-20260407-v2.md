@@ -1,15 +1,16 @@
 # Tool 层、Trace 层与 Agent 初始化器实现设计
 
 > 本文档是「代码感知智能开发方案智能体 v2」的**子任务实现设计**。
-> 父文档：`代码感知智能开发方案智能体-20260406-v2.md`
+> 父文档：`整体方案设计-20260406-v2.md`
 > 聚焦范围：devplan 模块的 Tool 标准协议层 + 全链路 Trace + Agent 启动注册
 
 ## 变更记录
 
-| 版本 | 日期       | 修改人    | 变更内容摘要 |
-|------|------------|-----------|--------------|
-| v1   | 2026-04-07 | zhangkai  | 初始版本：6 Tool + DevPlanToolRegistry + DevPlanAgentInitializer + Trace |
-| v2   | 2026-04-07 | zhangkai  | 重构 Tool 定位：Tool 只做机械提取，理解由 Agent(LLM) 完成。重新划分 CODE_AWARENESS 工具为 4 个元数据提取器 + 1 个向量索引器；ArchTopologyTool 合并进 CodeStructureAnalysisTool |
+| 版本   | 日期       | 修改人    | 变更内容摘要                                                                                                                                                                       |
+|--------|------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| v1     | 2026-04-07 | zhangkai  | 初始版本：6 Tool + DevPlanToolRegistry + DevPlanAgentInitializer + Trace                                                                                                           |
+| v2     | 2026-04-07 | zhangkai  | 重构 Tool 定位：Tool 只做机械提取，理解由 Agent(LLM) 完成。重新划分 CODE_AWARENESS 工具为 4 个元数据提取器 + 1 个向量索引器；ArchTopologyTool 合并进 CodeStructureAnalysisTool         |
+| v2.1   | 2026-04-08 | zhangkai  | 拆分 CODE_AWARENESS Agent 设计到独立文档 `代码感知智能体实现/`，本文档聚焦 Tool/Trace/Initializer 基础设施                                                                            |
 
 ---
 
@@ -73,74 +74,18 @@ v1 设计中 Tool 试图"理解"代码（如 ProjectScanTool 输出 ProjectStruc
 
 ---
 
-## 2. 核心设计原则：Tool 只是眼睛，Agent 才是大脑
+## 2. 核心设计原则
 
-### 2.1 职责分离
+**Tool = 眼睛（机械提取），Agent = 大脑（LLM 理解）。** Tool 绝不做判断和总结。
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Tool（眼睛）                                                 │
-│  ✅ 机械提取：读文件、解析 XML、扫描注解、正则匹配              │
-│  ✅ 输出原始数据：JSON 格式的结构化元数据                       │
-│  ❌ 不做判断、不做总结、不调 LLM                               │
-├──────────────────────────────────────────────────────────────┤
-│  Agent（大脑）                                                │
-│  ✅ 理解 Tool 输出的原始数据                                   │
-│  ✅ 综合多个 Tool 结果，生成项目画像（ProjectProfile）           │
-│  ✅ 判断和推理：识别业务能力、发现架构问题、评估影响范围          │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### 2.2 ScanNode 的完整执行流程
-
-```
-ScanNode（CODE_AWARENESS Agent 的 ReAct 循环）：
-
-Tool 调用 ①: ProjectScanTool
-  → 原始输出：目录树、模块列表、文件统计
-
-Tool 调用 ②: DependencyAnalysisTool
-  → 原始输出：pom.xml 解析结果、依赖清单、版本号
-
-Tool 调用 ③: CodeStructureAnalysisTool
-  → 原始输出：@Controller/@Entity/@Service/@Repository 注解扫描
-              类签名列表、import 关系、层间依赖
-
-Tool 调用 ④: ConfigScanTool
-  → 原始输出：application.yml 配置项、Profile 列表、外部服务地址
-
-Tool 调用 ⑤（可选）: CodeIndexTool
-  → 向量化索引，供后续 AnalyzeNode 的 CodeSearchTool 使用
-
-Agent（LLM）综合以上所有 Tool 输出 → 生成 ProjectProfile：
-  - 项目概述（做什么、核心业务）
-  - 技术栈总结
-  - 分层架构识别
-  - 现有 API 能力
-  - 数据模型概览
-  - 可复用组件
-  - 架构规范和违规项
-```
-
-### 2.3 项目画像（ProjectProfile）的维度
-
-参考 Claude Code `/init` 生成的 CLAUDE.md，但更结构化（JSON 格式，供后续 Agent 程序化消费）：
-
-| # | 维度 | 数据来源（Tool） | 理解方式（Agent） |
-|---|------|-----------------|------------------|
-| ① | 项目概述 | ProjectScanTool + DependencyAnalysisTool | LLM 从模块名、依赖推断项目用途 |
-| ② | 技术栈 | DependencyAnalysisTool | LLM 总结关键框架和版本 |
-| ③ | 代码结构 | ProjectScanTool | LLM 标注各目录职责 |
-| ④ | 现有 API | CodeStructureAnalysisTool | LLM 归类 REST 端点为业务能力 |
-| ⑤ | 数据模型 | CodeStructureAnalysisTool | LLM 识别核心 Entity 及关系 |
-| ⑥ | 架构规范 | CodeStructureAnalysisTool（import 分析） | LLM 判断分层合规性 |
-| ⑦ | 配置概要 | ConfigScanTool | LLM 识别关键外部依赖 |
+> CODE_AWARENESS Agent 如何编排这些 Tool、生成 ProjectProfile 的完整流程，见独立文档：
+> `代码感知智能体实现/代码感知智能体实现-20260408-v1.md`
 
 ---
 
 ## 3. 详细设计
 
-### 3.1 CODE_AWARENESS 角色工具（4 个提取器 + 1 个索引器）
+### 3.1 元数据提取器（4 个）+ 向量索引器（1 个）
 
 #### 3.1.1 ProjectScanTool
 
@@ -423,11 +368,11 @@ Agent（LLM）综合以上所有 Tool 输出 → 生成 ProjectProfile：
 
 ---
 
-### 3.2 REQUIREMENT_ANALYZER 角色工具
+### 3.2 检索与读取工具
 
 #### 3.2.1 CodeSearchTool
 
-**职责：** 基于语义在已索引代码中检索相关类。REQUIREMENT_ANALYZER 和 SOLUTION_ARCHITECT 共用。
+**职责：** 基于语义在已索引代码中检索相关类。供 REQUIREMENT_ANALYZER 和 SOLUTION_ARCHITECT 共用。
 
 **Tool ID：** `devplan_code_search`
 
@@ -466,7 +411,7 @@ Agent（LLM）综合以上所有 Tool 输出 → 生成 ProjectProfile：
 
 ---
 
-### 3.3 SOLUTION_ARCHITECT 角色工具
+### 3.3 模板渲染工具
 
 #### 3.3.1 TemplateRenderTool
 
@@ -587,13 +532,13 @@ public class DevPlanTraceRecorder {
 
 | 全类名 | 操作 | 说明 |
 |--------|------|------|
-| **Tool — CODE_AWARENESS 提取器** | | |
+| **Tool — 元数据提取器 + 向量索引器** | | |
 | `c.e.l.infrastructure.devplan.tool.ProjectScanTool` | 新建 | @Tool, 目录结构+模块+文件统计 |
 | `c.e.l.infrastructure.devplan.tool.DependencyAnalysisTool` | 新建 | @Tool, pom.xml 解析→依赖清单 |
 | `c.e.l.infrastructure.devplan.tool.CodeStructureAnalysisTool` | 新建 | @Tool, 注解扫描+类签名+import 分析+层依赖 |
 | `c.e.l.infrastructure.devplan.tool.ConfigScanTool` | 新建 | @Tool, 配置文件提取+脱敏 |
 | `c.e.l.infrastructure.devplan.tool.CodeIndexTool` | 新建 | @Tool, 代码向量索引到 Qdrant |
-| **Tool — REQUIREMENT_ANALYZER/SOLUTION_ARCHITECT** | | |
+| **Tool — 检索 / 读取 / 渲染** | | |
 | `c.e.l.infrastructure.devplan.tool.CodeSearchTool` | 新建 | @Tool, VectorStore 语义搜索 |
 | `c.e.l.infrastructure.devplan.tool.FileReadTool` | 新建 | @Tool, 安全文件读取 |
 | `c.e.l.infrastructure.devplan.tool.TemplateRenderTool` | 新建 | @Tool, 设计文档模板渲染 |

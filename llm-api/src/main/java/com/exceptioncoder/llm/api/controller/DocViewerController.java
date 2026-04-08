@@ -99,7 +99,8 @@ public class DocViewerController {
      */
     @GetMapping("/versions")
     public ResponseEntity<List<DocStructureVersion>> getVersions() {
-        return ResponseEntity.ok(docViewerService.getVersionHistory());
+//        return ResponseEntity.ok(docViewerService.getVersion());
+        return null;
     }
 
     /**
@@ -107,8 +108,9 @@ public class DocViewerController {
      */
     @GetMapping("/versions/{version}")
     public ResponseEntity<DocStructureVersion> getVersion(@PathVariable int version) {
-        return docViewerService.getVersion(version)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+//        return docViewerService.getVersion(version)
+//                .map(ResponseEntity::ok)
+//                .orElse(ResponseEntity.notFound().build());
+        return null;
     }
 }

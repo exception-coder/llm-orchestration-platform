@@ -54,6 +54,21 @@ const routes = [
     path: '/note-capture',
     name: 'NoteCapture',
     component: () => import('../views/NoteCapture.vue')
+  },
+  {
+    path: '/agent-list',
+    name: 'AgentList',
+    component: () => import('../views/AgentList.vue')
+  },
+  {
+    path: '/graph-orchestration',
+    name: 'GraphOrchestration',
+    component: () => import('../views/GraphOrchestration.vue')
+  },
+  {
+    path: '/tool-management',
+    name: 'ToolManagement',
+    component: () => import('../views/ToolManagement.vue')
   }
 ]
 

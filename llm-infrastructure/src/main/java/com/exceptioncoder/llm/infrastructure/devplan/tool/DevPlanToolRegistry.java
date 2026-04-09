@@ -35,14 +35,17 @@ public class DevPlanToolRegistry {
                     "devplan_dependency_analysis",
                     "devplan_code_structure",
                     "devplan_config_scan",
-                    "devplan_code_index"
+                    "devplan_code_index",
+                    "devplan_profile_index"
             ),
             AgentRole.REQUIREMENT_ANALYZER, List.of(
                     "devplan_code_search",
+                    "devplan_profile_search",
                     "devplan_file_read"
             ),
             AgentRole.SOLUTION_ARCHITECT, List.of(
                     "devplan_code_search",
+                    "devplan_profile_search",
                     "devplan_template_render"
             ),
             AgentRole.PLAN_REVIEWER, List.of()

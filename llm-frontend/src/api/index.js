@@ -107,6 +107,39 @@ export const docViewerAPI = {
   indexDocs: () => request.post('/docs/index')
 }
 
+// Agent 管理 API
+export const agentAPI = {
+  getAll: () => request.get('/agents'),
+  getById: (id) => request.get(`/agents/${id}`),
+  save: (data) => request.post('/agents', data),
+  delete: (id) => request.delete(`/agents/${id}`),
+  execute: (id, data) => request.post(`/agents/${id}/execute`, data),
+  getTools: (id) => request.get(`/agents/${id}/tools`),
+  // 执行流水
+  getTrace: (traceId) => request.get(`/agents/traces/${traceId}`),
+  getAgentTraces: (agentId, limit = 20) => request.get(`/agents/${agentId}/traces`, { params: { limit } }),
+  getRecentTraces: (limit = 20) => request.get('/agents/traces', { params: { limit } })
+}
+
+// Graph 编排 API
+export const graphAPI = {
+  getAll: () => request.get('/graphs'),
+  getById: (id) => request.get(`/graphs/${id}`),
+  save: (data) => request.post('/graphs', data),
+  delete: (id) => request.delete(`/graphs/${id}`),
+  execute: (id, data) => request.post(`/graphs/${id}/execute`, data),
+  getAgents: (id) => request.get(`/graphs/${id}/agents`),
+  getCallChain: (id) => request.get(`/graphs/${id}/call-chain`)
+}
+
+// Tool 管理 API
+export const toolAPI = {
+  getAll: () => request.get('/tools'),
+  getById: (id) => request.get(`/tools/${id}`),
+  execute: (id, params) => request.post(`/tools/${id}/execute`, params),
+  delete: (id) => request.delete(`/tools/${id}`)
+}
+
 export const secretaryAPI = {
   chat: (data) => request.post('/secretary/chat', data),
   getTools: () => request.get('/secretary/tools'),

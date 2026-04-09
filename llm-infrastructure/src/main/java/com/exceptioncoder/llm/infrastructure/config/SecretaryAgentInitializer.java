@@ -3,12 +3,13 @@ package com.exceptioncoder.llm.infrastructure.config;
 import com.exceptioncoder.llm.domain.model.AgentDefinition;
 import com.exceptioncoder.llm.domain.repository.AgentDefinitionRepository;
 import com.exceptioncoder.llm.domain.registry.ToolRegistry;
+import com.exceptioncoder.llm.infrastructure.agent.annotation.AgentGroup;
+import com.exceptioncoder.llm.infrastructure.agent.annotation.AgentGroupProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,7 +18,12 @@ import java.util.List;
  */
 @Slf4j
 @Component
-public class SecretaryAgentInitializer implements ApplicationListener<ApplicationReadyEvent> {
+@AgentGroup(
+        id = "secretary",
+        name = "个人秘书智能体",
+        description = "智能个人秘书，支持日程管理、待办管理、笔记检索等功能"
+)
+public class SecretaryAgentInitializer implements ApplicationListener<ApplicationReadyEvent>, AgentGroupProvider {
 
     private static final String SECRETARY_AGENT_ID = "secretary-default";
 
@@ -57,6 +63,11 @@ public class SecretaryAgentInitializer implements ApplicationListener<Applicatio
 
         agentRepository.save(secretary);
         log.info("秘书 Agent 初始化完成，工具数量: {}", secretaryToolIds.size());
+    }
+
+    @Override
+    public List<String> getAgentIds() {
+        return List.of(SECRETARY_AGENT_ID);
     }
 
     private boolean isSecretaryTool(String toolId) {

@@ -12,7 +12,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 内置碎片记录搜索工具
+ * 碎片记录搜索工具 -- 检索用户已有的碎片笔记。
+ *
+ * <p><b>归属智能体：</b>个人秘书智能体（secretary）
+ * <br><b>归属 Agent：</b>个人秘书（secretary-default）
+ * <br><b>调用阶段：</b>对话过程中按需调用
+ * <br><b>业务场景：</b>用户询问历史记录（如"我之前记过哪些关于XX的笔记"）时，
+ * 秘书 Agent 调用 note_search 按关键词和类目检索；需要查看具体内容时调用 note_get。
+ * 底层查询 NoteRepository，支持模糊搜索和类目过滤。
  */
 @Slf4j
 @Component

@@ -12,8 +12,12 @@ import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.*;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import reactor.core.publisher.Flux;
 
 import java.util.*;
@@ -69,7 +73,7 @@ public class AlibabaAgentExecutor implements AgentExecutor {
         List<ToolCall> toolCalls = new ArrayList<>();
         List<String> thoughtHistory = new ArrayList<>();
 
-        DashScopeChatModel chatModel = buildChatModel(agent);
+        ChatModel chatModel = buildChatModel(agent);
         List<org.springframework.ai.chat.messages.Message> messages = buildInitialMessages(agent, request);
 
         int maxIterations = agent.maxIterations();
@@ -152,7 +156,15 @@ public class AlibabaAgentExecutor implements AgentExecutor {
         return agentRepository.existsById(agentId);
     }
 
-    private DashScopeChatModel buildChatModel(AgentDefinition agent) {
+    private ChatModel buildChatModel(AgentDefinition agent) {
+        String provider = llmConfig.getDefaultProvider();
+        if ("zhipu".equals(provider)) {
+            return buildZhipuChatModel(agent);
+        }
+        return buildDashScopeChatModel(agent);
+    }
+
+    private DashScopeChatModel buildDashScopeChatModel(AgentDefinition agent) {
         LLMConfiguration.AlibabaConfig config = llmConfig.getAlibaba();
         String model = agent.llmModel() != null ? agent.llmModel() : config.getModel();
         DashScopeChatOptions options = DashScopeChatOptions.builder()
@@ -166,6 +178,25 @@ public class AlibabaAgentExecutor implements AgentExecutor {
                 .build();
         return DashScopeChatModel.builder()
                 .dashScopeApi(api)
+                .defaultOptions(options)
+                .build();
+    }
+
+    private OpenAiChatModel buildZhipuChatModel(AgentDefinition agent) {
+        LLMConfiguration.ZhipuConfig config = llmConfig.getZhipu();
+        String model = agent.llmModel() != null ? agent.llmModel() : config.getModel();
+        OpenAiApi api = OpenAiApi.builder()
+                .apiKey(config.getApiKey())
+                .baseUrl(config.getBaseUrl())
+                .completionsPath("/v4/chat/completions")
+                .build();
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
+                .model(model)
+                .temperature(config.getTemperature())
+                .maxTokens(config.getMaxTokens())
+                .build();
+        return OpenAiChatModel.builder()
+                .openAiApi(api)
                 .defaultOptions(options)
                 .build();
     }

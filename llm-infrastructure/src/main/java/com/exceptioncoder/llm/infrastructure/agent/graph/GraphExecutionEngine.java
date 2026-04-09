@@ -11,7 +11,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -164,20 +168,7 @@ public class GraphExecutionEngine {
         // 变量替换
         String resolvedPrompt = resolveVariables(prompt, ctx);
 
-        LLMConfiguration.AlibabaConfig config = llmConfig.getAlibaba();
-        DashScopeChatOptions options = DashScopeChatOptions.builder()
-                .withModel(model != null ? model : config.getModel())
-                .withTemperature(config.getTemperature())
-                .withMaxToken(config.getMaxTokens())
-                .build();
-        DashScopeApi api = new DashScopeApi.Builder()
-                .apiKey(config.getApiKey())
-                .baseUrl(config.getBaseUrl())
-                .build();
-        DashScopeChatModel chatModel = DashScopeChatModel.builder()
-                .dashScopeApi(api)
-                .defaultOptions(options)
-                .build();
+        ChatModel chatModel = buildChatModel(model);
 
         String systemPrompt = node.getString("system_prompt");
         List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
@@ -189,6 +180,48 @@ public class GraphExecutionEngine {
         var response = chatModel.call(new Prompt(messages));
         String output = response.getResults().get(0).getOutput().getText();
         return new NodeOutput(output, true, null, null);
+    }
+
+    private ChatModel buildChatModel(String modelOverride) {
+        if ("zhipu".equals(llmConfig.getDefaultProvider())) {
+            return buildZhipuChatModel(modelOverride);
+        }
+        return buildDashScopeChatModel(modelOverride);
+    }
+
+    private DashScopeChatModel buildDashScopeChatModel(String modelOverride) {
+        LLMConfiguration.AlibabaConfig config = llmConfig.getAlibaba();
+        DashScopeChatOptions options = DashScopeChatOptions.builder()
+                .withModel(modelOverride != null ? modelOverride : config.getModel())
+                .withTemperature(config.getTemperature())
+                .withMaxToken(config.getMaxTokens())
+                .build();
+        DashScopeApi api = new DashScopeApi.Builder()
+                .apiKey(config.getApiKey())
+                .baseUrl(config.getBaseUrl())
+                .build();
+        return DashScopeChatModel.builder()
+                .dashScopeApi(api)
+                .defaultOptions(options)
+                .build();
+    }
+
+    private OpenAiChatModel buildZhipuChatModel(String modelOverride) {
+        LLMConfiguration.ZhipuConfig config = llmConfig.getZhipu();
+        OpenAiApi api = OpenAiApi.builder()
+                .apiKey(config.getApiKey())
+                .baseUrl(config.getBaseUrl())
+                .completionsPath("/v4/chat/completions")
+                .build();
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
+                .model(modelOverride != null ? modelOverride : config.getModel())
+                .temperature(config.getTemperature())
+                .maxTokens(config.getMaxTokens())
+                .build();
+        return OpenAiChatModel.builder()
+                .openAiApi(api)
+                .defaultOptions(options)
+                .build();
     }
 
     private NodeOutput executeToolNode(GraphNode node, Map<String, Object> ctx) {

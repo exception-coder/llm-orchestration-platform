@@ -11,7 +11,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * 日程管理工具
+ * 日程管理工具 -- 提供日程的增、查、完成操作。
+ *
+ * <p><b>归属智能体：</b>个人秘书智能体（secretary）
+ * <br><b>归属 Agent：</b>个人秘书（secretary-default）
+ * <br><b>调用阶段：</b>对话过程中按需调用
+ * <br><b>业务场景：</b>用户在与秘书对话时提到时间相关事项（如"明天下午3点开会"），
+ * 秘书 Agent 调用 schedule_add 创建日程；用户询问近期安排时调用 schedule_list；
+ * 事项完成后调用 schedule_done 标记。数据持久化到 secretary_schedule 表。
  */
 @Slf4j
 public class ScheduleTool {

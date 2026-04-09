@@ -9,7 +9,13 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 
 /**
- * 内置计算器工具
+ * 计算器工具 -- 执行基础数学运算。
+ *
+ * <p><b>归属智能体：</b>通用（未绑定特定智能体）
+ * <br><b>归属 Agent：</b>可被任意 Agent 引用
+ * <br><b>调用阶段：</b>对话过程中按需调用
+ * <br><b>业务场景：</b>当 Agent 对话中需要进行精确数学计算时（如成本估算、数据统计），
+ * 调用本工具执行表达式计算，避免 LLM 自行推算产生数值幻觉。
  */
 @Slf4j
 @Component

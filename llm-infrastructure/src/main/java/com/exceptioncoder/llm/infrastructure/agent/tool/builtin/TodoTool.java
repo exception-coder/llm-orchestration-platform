@@ -10,7 +10,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 待办管理工具
+ * 待办管理工具 -- 提供待办事项的增、查、完成操作。
+ *
+ * <p><b>归属智能体：</b>个人秘书智能体（secretary）
+ * <br><b>归属 Agent：</b>个人秘书（secretary-default）
+ * <br><b>调用阶段：</b>对话过程中按需调用
+ * <br><b>业务场景：</b>用户提到需要做某事时（如"记一下要买牛奶"），秘书 Agent 调用
+ * todo_add 创建待办，支持设置优先级和截止日期；用户查看待办清单时调用 todo_list；
+ * 完成后调用 todo_done 标记。数据持久化到 secretary_todo 表。
  */
 @Slf4j
 public class TodoTool {

@@ -175,8 +175,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { templateAPI } from '@/api'
+import { useResponsive } from '@/composables/useResponsive'
 
-const isMobile = ref(false)
+const { isMobile } = useResponsive()
 
 const templates = ref([])
 const selectedTemplate = ref(null)
@@ -201,14 +202,7 @@ const filteredTemplates = computed(() => {
   )
 })
 
-// 检测是否为移动端
-const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 768
-}
-
 onMounted(async () => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
   await loadTemplates()
 })
 
@@ -369,7 +363,7 @@ const handleDelete = async (row) => {
 
 .help-text {
   margin-top: 8px;
-  color: #909399;
+  color: var(--app-text-secondary);
   font-size: 12px;
   display: flex;
   align-items: center;

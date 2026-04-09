@@ -59,3 +59,4 @@ secretary:
     note-search: true # 笔记检索工具（复用 NoteSearchTool）
     rag-search: false # 知识库 RAG（需 Qdrant 启动）
     web-search: false # 网络搜索（需配置搜索 API Key）
+

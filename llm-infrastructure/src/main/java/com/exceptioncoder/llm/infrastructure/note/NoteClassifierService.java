@@ -6,8 +6,8 @@ import com.exceptioncoder.llm.domain.model.Message;
 import com.exceptioncoder.llm.domain.model.NoteCategory;
 import com.exceptioncoder.llm.domain.model.NoteClassificationResult;
 import com.exceptioncoder.llm.domain.repository.NoteCategoryRepository;
-import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.domain.service.NoteClassifier;
+import com.exceptioncoder.llm.infrastructure.provider.LLMProviderRouter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -24,15 +24,15 @@ import java.util.stream.Collectors;
 @Service
 public class NoteClassifierService implements NoteClassifier {
 
-    private final LLMProvider llmProvider;
+    private final LLMProviderRouter providerRouter;
     private final NoteCategoryRepository categoryRepository;
     private final ObjectMapper objectMapper;
 
     public NoteClassifierService(
-            LLMProvider llmProvider,
+            LLMProviderRouter providerRouter,
             NoteCategoryRepository categoryRepository,
             ObjectMapper objectMapper) {
-        this.llmProvider = llmProvider;
+        this.providerRouter = providerRouter;
         this.categoryRepository = categoryRepository;
         this.objectMapper = objectMapper;
     }
@@ -58,7 +58,7 @@ public class NoteClassifierService implements NoteClassifier {
                 .build();
 
         log.info("开始对输入内容进行分类，长度: {} 字", rawText.length());
-        LLMResponse response = llmProvider.chat(request);
+        LLMResponse response = providerRouter.getDefault().chat(request);
 
         return parseClassificationResult(response.getContent());
     }

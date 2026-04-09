@@ -140,7 +140,7 @@
               <el-tag v-else-if="resultA.status === 'success'" type="success">完成</el-tag>
               <el-tag v-else-if="resultA.status === 'error'" type="danger">失败</el-tag>
             </div>
-            <div class="result-content" v-html="renderMarkdown(resultA.content)"></div>
+            <div class="result-content markdown-rendered" v-html="renderMarkdown(resultA.content)"></div>
             <div v-if="resultA.tokenUsage" class="result-meta">
               <el-tag size="small">Tokens: {{ resultA.tokenUsage.totalTokens }}</el-tag>
               <el-tag size="small" type="info">耗时: {{ resultA.duration }}ms</el-tag>
@@ -159,7 +159,7 @@
               <el-tag v-else-if="resultB.status === 'success'" type="success">完成</el-tag>
               <el-tag v-else-if="resultB.status === 'error'" type="danger">失败</el-tag>
             </div>
-            <div class="result-content" v-html="renderMarkdown(resultB.content)"></div>
+            <div class="result-content markdown-rendered" v-html="renderMarkdown(resultB.content)"></div>
             <div v-if="resultB.tokenUsage" class="result-meta">
               <el-tag size="small">Tokens: {{ resultB.tokenUsage.totalTokens }}</el-tag>
               <el-tag size="small" type="info">耗时: {{ resultB.duration }}ms</el-tag>
@@ -175,27 +175,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { templateAPI, modelConfigAPI, promptTestAPI } from '@/api'
-import { marked } from 'marked'
-import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.css'
+import { useResponsive } from '@/composables/useResponsive'
+import { useMarkdown } from '@/composables/useMarkdown'
+import { useSSEStream } from '@/composables/useSSEStream'
 
-const isMobile = ref(false)
-
-// 配置 marked
-marked.setOptions({
-  highlight: function(code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(code, { language: lang }).value
-      } catch (err) {
-        console.error('Highlight error:', err)
-      }
-    }
-    return hljs.highlightAuto(code).value
-  },
-  breaks: true,
-  gfm: true
-})
+const { isMobile } = useResponsive()
+const { renderMarkdown } = useMarkdown()
+const { fetchSSE } = useSSEStream()
 
 const config = ref({
   templateName: '',
@@ -232,14 +218,7 @@ const canCompare = computed(() => {
          config.value.variables
 })
 
-// 检测是否为移动端
-const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 768
-}
-
 onMounted(async () => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
   await Promise.all([
     loadTemplates(),
     loadModels()
@@ -346,65 +325,25 @@ const executePrompt = async (version, promptContent, variables) => {
   const startTime = Date.now()
 
   try {
-    // 渲染 Prompt
     let renderedPrompt = promptContent
     for (const [key, value] of Object.entries(variables)) {
-      const placeholder = `{${key}}`
-      renderedPrompt = renderedPrompt.replaceAll(placeholder, value)
+      renderedPrompt = renderedPrompt.replaceAll(`{${key}}`, value)
     }
 
-    // 调用 LLM
-    const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-    const url = config.value.stream ? `${baseURL}/chat/stream` : `${baseURL}/chat`
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const url = config.value.stream ? '/chat/stream' : '/chat'
+
+    await fetchSSE(url, {
+      conversationId: `comparison-${version}-${Date.now()}`,
+      message: renderedPrompt,
+      model: config.value.model
+    }, {
+      onContent: (content) => {
+        result.value.content += content
       },
-      body: JSON.stringify({
-        conversationId: `comparison-${version}-${Date.now()}`,
-        message: renderedPrompt,
-        model: config.value.model
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-    }
-
-    // 解析响应
-    const lines = buffer.split('\n')
-    for (const line of lines) {
-      if (line.startsWith('data:')) {
-        const data = line.slice(5).trim()
-        if (data === '[DONE]') continue
-        if (!data) continue
-
-        try {
-          const parsed = JSON.parse(data)
-          if (parsed.content) {
-            // 追加内容而不是覆盖
-            result.value.content += parsed.content
-          }
-          if (parsed.tokenUsage) {
-            result.value.tokenUsage = parsed.tokenUsage
-          }
-        } catch (e) {
-          console.error('Parse error:', e, 'Data:', data)
-        }
+      onTokenUsage: (tokenUsage) => {
+        result.value.tokenUsage = tokenUsage
       }
-    }
+    })
 
     result.value.status = 'success'
     result.value.duration = Date.now() - startTime
@@ -412,17 +351,6 @@ const executePrompt = async (version, promptContent, variables) => {
     console.error(`版本${version}执行失败:`, error)
     result.value.status = 'error'
     result.value.content = `执行失败: ${error.message}`
-  }
-}
-
-// 渲染 Markdown
-const renderMarkdown = (content) => {
-  if (!content) return '<div class="empty-result">暂无结果</div>'
-  try {
-    return marked.parse(content)
-  } catch (error) {
-    console.error('Markdown render error:', error)
-    return content
   }
 }
 </script>
@@ -441,10 +369,10 @@ const renderMarkdown = (content) => {
 
 .prompt-section,
 .result-section {
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
+  border: 1px solid var(--app-border-base);
+  border-radius: var(--app-radius-sm);
   padding: 16px;
-  background: #fafafa;
+  background: var(--app-bg-light);
 }
 
 .section-header {
@@ -457,7 +385,7 @@ const renderMarkdown = (content) => {
 .section-title {
   font-weight: 600;
   font-size: 14px;
-  color: #303133;
+  color: var(--app-text-primary);
 }
 
 .result-content {
@@ -465,13 +393,13 @@ const renderMarkdown = (content) => {
   max-height: 600px;
   overflow-y: auto;
   padding: 16px;
-  background: #fff;
-  border-radius: 4px;
+  background: var(--app-bg-card);
+  border-radius: var(--app-radius-sm);
   line-height: 1.6;
 }
 
 .empty-result {
-  color: #909399;
+  color: var(--app-text-secondary);
   text-align: center;
   padding: 60px 0;
 }
@@ -480,47 +408,6 @@ const renderMarkdown = (content) => {
   margin-top: 12px;
   display: flex;
   gap: 8px;
-}
-
-/* Markdown 样式 */
-.result-content :deep(h1),
-.result-content :deep(h2),
-.result-content :deep(h3) {
-  margin: 16px 0 8px 0;
-  font-weight: 600;
-}
-
-.result-content :deep(p) {
-  margin: 8px 0;
-}
-
-.result-content :deep(ul),
-.result-content :deep(ol) {
-  margin: 8px 0;
-  padding-left: 24px;
-}
-
-.result-content :deep(code) {
-  background: rgba(0, 0, 0, 0.05);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.9em;
-}
-
-.result-content :deep(pre) {
-  background: #282c34;
-  color: #abb2bf;
-  padding: 12px;
-  border-radius: 6px;
-  overflow-x: auto;
-  margin: 12px 0;
-}
-
-.result-content :deep(pre code) {
-  background: none;
-  padding: 0;
-  color: inherit;
 }
 
 /* 移动端适配 */

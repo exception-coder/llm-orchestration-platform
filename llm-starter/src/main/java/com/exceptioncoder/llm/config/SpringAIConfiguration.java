@@ -1,70 +1,91 @@
 package com.exceptioncoder.llm.config;
 
+import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaEmbeddingModel;
+import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Spring AI 配置类
- * 解决多个 EmbeddingModel Bean 冲突问题
- * 
- * 问题描述：
- * 当同时配置了 OpenAI 和 Ollama 时，Spring AI 会创建两个 EmbeddingModel bean。
- * QdrantVectorStoreAutoConfiguration 需要注入一个 EmbeddingModel，但不知道使用哪个。
- * 
- * EmbeddingModel 说明：
- * - 作用：将文本转换为向量（embedding），用于向量存储和相似度检索
- * - OpenAI EmbeddingModel：调用远程 API（https://api.openai.com），需要 API 密钥
- * - Ollama EmbeddingModel：调用本地 HTTP 服务（http://localhost:11434），无需外部 API
- * - 两者都需要网络请求（HTTP API 调用），只是服务位置不同
- * 
- * 解决方案：
- * 创建 DelegatingEmbeddingModel 代理类，统一管理多个 EmbeddingModel
- * 
- * 优势：
- * 1. 支持多个 Embedding 模型共存
- * 2. 根据模型标识符动态选择具体实现
- * 3. 提供默认模型（OpenAI）
- * 4. 对外透明，符合 EmbeddingModel 接口
- * 
- * 使用方式：
- * - 默认使用 OpenAI Embedding
- * - 通过 DelegatingEmbeddingModel.setCurrentModel("ollama") 切换模型
- * - 通过 delegatingEmbeddingModel.getModel("ollama") 获取特定模型
- * 
- * @author system
+ * 创建 DelegatingEmbeddingModel 代理，优先使用智谱（手动构建 OpenAI 兼容客户端）做 Embedding。
+ *
+ * <p>spring.ai.openai 配置位留给 OpenAI 原生使用，智谱通过 llm.zhipu 自定义配置手动构建。
+ *
+ * @author zhangkai
  */
 @Configuration
 public class SpringAIConfiguration {
-    
+
     private static final Logger log = LoggerFactory.getLogger(SpringAIConfiguration.class);
-    
+
     /**
-     * 创建 DelegatingEmbeddingModel 代理 Bean
-     * 标记为 @Primary，作为主要的 EmbeddingModel
-     * 
-     * @param openAiEmbeddingModel OpenAI Embedding 模型（可选）
-     * @param ollamaEmbeddingModel Ollama Embedding 模型（可选）
-     * @return DelegatingEmbeddingModel 代理实例
+     * 智谱 Embedding 模型（手动构建，走 OpenAI 兼容协议）
      */
+    @Bean
+    public OpenAiEmbeddingModel zhipuEmbeddingModel(LLMConfiguration llmConfiguration) {
+        LLMConfiguration.ZhipuConfig zhipu = llmConfiguration.getZhipu();
+        if (zhipu.getApiKey() == null || zhipu.getApiKey().isBlank()) {
+            log.warn("智谱 API Key 未配置，zhipuEmbeddingModel 不可用");
+            return null;
+        }
+
+        OpenAiApi api = OpenAiApi.builder()
+                .apiKey(zhipu.getApiKey())
+                .baseUrl(zhipu.getBaseUrl())
+                .embeddingsPath("/v4/embeddings")
+                .build();
+
+        OpenAiEmbeddingOptions options = OpenAiEmbeddingOptions.builder()
+                .model(zhipu.getEmbeddingModel())
+                .build();
+
+        log.info("创建智谱 EmbeddingModel: base-url={}, model={}",
+                zhipu.getBaseUrl(), zhipu.getEmbeddingModel());
+        return new OpenAiEmbeddingModel(api, MetadataMode.EMBED, options);
+    }
+
     @Bean
     @Primary
     public DelegatingEmbeddingModel delegatingEmbeddingModel(
+            @Autowired(required = false) OpenAiEmbeddingModel zhipuEmbeddingModel,
             @Autowired(required = false) OllamaEmbeddingModel ollamaEmbeddingModel) {
-        
-        log.info("创建 DelegatingEmbeddingModel 代理");
-        
-        DelegatingEmbeddingModel delegatingModel = new DelegatingEmbeddingModel(
-            ollamaEmbeddingModel
-        );
-        
-        log.info("可用的 Embedding 模型: {}", delegatingModel.getAvailableModels());
-        
-        return delegatingModel;
+
+        Map<String, EmbeddingModel> models = new LinkedHashMap<>();
+        EmbeddingModel defaultModel = null;
+
+        // 智谱优先
+        if (zhipuEmbeddingModel != null) {
+            models.put("zhipu", zhipuEmbeddingModel);
+            defaultModel = zhipuEmbeddingModel;
+            log.info("注册智谱 EmbeddingModel [默认]");
+        }
+
+        if (ollamaEmbeddingModel != null) {
+            models.put("ollama", ollamaEmbeddingModel);
+            if (defaultModel == null) {
+                defaultModel = ollamaEmbeddingModel;
+                log.info("注册 Ollama EmbeddingModel [默认]");
+            } else {
+                log.info("注册 Ollama EmbeddingModel [备选]");
+            }
+        }
+
+        if (defaultModel == null) {
+            throw new IllegalStateException("至少需要配置一个 EmbeddingModel（智谱 或 Ollama）");
+        }
+
+        return new DelegatingEmbeddingModel(defaultModel, models);
     }
 }
-

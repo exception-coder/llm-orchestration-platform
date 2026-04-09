@@ -3,7 +3,7 @@
 spring:
   ai:
     # 阿里云百炼（DashScope）配置
-    .alibaba:
+    alibaba:
       api-key: ${DASHSCOPE_API_KEY}
       base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
       chat:
@@ -32,11 +32,20 @@ spring:
         use-tls: true
         collection-name: ${QDRANT_COLLECTION:job_postings_test}
         initialize-schema: true
+        enabled: true
+
+    # 文档向量库配置
+    vectorstore-qdrant-docs:
+      collection-name: ${QDRANT_COLLECTION_DOCS:docs_vectors}
+
+    # 项目画像向量库配置
+    vectorstore-qdrant-profile:
+      collection-name: ${QDRANT_COLLECTION_PROFILE:project_profile}
 
 # LLM 业务配置
 llm:
-  default-provider: alibaba
-  default-model: qwen-plus
+  default-provider: zhipu
+  default-model: glm-4-flash
   alibaba:
     api-key: ${DASHSCOPE_API_KEY}
     base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
@@ -47,6 +56,13 @@ llm:
     base-url: ${OLLAMA_BASE_URL:http://test-ollama-server:11434}
     model: ${OLLAMA_MODEL:llama3.2}
     temperature: ${OLLAMA_TEMPERATURE:0.5}
+  zhipu:
+    api-key: ${ZHIPU_API_KEY}
+    base-url: ${ZHIPU_BASE_URL:https://open.bigmodel.cn/api/paas}
+    embedding-model: ${ZHIPU_EMBEDDING_MODEL:embedding-3}
+    model: ${ZHIPU_MODEL:glm-4-flash}
+    temperature: ${ZHIPU_TEMPERATURE:0.5}
+    max-tokens: ${ZHIPU_MAX_TOKENS:3000}
   common:
     timeout: 60000
     max-retries: 3

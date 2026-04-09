@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
+  --radius-4xl: 3rem;
+
+  /* 基础令牌 (默认拟物) */
+  --color-background: oklch(0.95 0.01 210);
+  --color-foreground: oklch(0.2 0.05 210);
+  --color-primary: oklch(0.6 0.2 250);
+  --color-card: oklch(0.95 0.01 210);
+  
+  --shadow-neo-flat: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+  --shadow-neo-inset: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff;
+}
+
+/* ==========================================================================
+   风格定义层 (Themes)
+   ========================================================================== */
+
+/* 1. 苹果风格 (Apple Glass) - 极致模糊与空气感 */
+:root[data-theme='apple'] {
+  --color-background: oklch(0.98 0 0); 
+  --color-foreground: oklch(0.1 0 0);
+  --color-card: rgba(255, 255, 255, 0.7);
+  --shadow-neo-flat: 0 4px 24px -1px rgba(0, 0, 0, 0.06), 0 2px 8px -1px rgba(0, 0, 0, 0.04);
+  --shadow-neo-inset: 0 0 0 1px rgba(0, 0, 0, 0.05) inset;
+  --glass-blur: 24px;
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+/* 2. 谷歌风格 (Material You) - 大圆角与柔和色调 */
+:root[data-theme='google'] {
+  --color-background: oklch(0.92 0.02 240); /* 柔和的浅紫/蓝 */
+  --color-foreground: oklch(0.2 0.05 240);
+  --color-primary: oklch(0.5 0.15 240);
+  --color-card: oklch(0.98 0.01 240);
+  --shadow-neo-flat: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --shadow-neo-inset: none;
+  --radius-xl: 2rem; /* MD3 的大圆角 */
+  --radius-2xl: 2.5rem;
+}
+
+/* 3. 赛博风格 (Cyber/Terminal) */
+:root[data-theme='cyber'] {
+  --color-background: oklch(0.1 0 0);
+  --color-foreground: oklch(0.7 0.3 150); /* 荧光绿 */
+  --color-primary: oklch(0.7 0.3 150);
+  --color-card: oklch(0.15 0 0);
+  --shadow-neo-flat: 0 0 10px rgba(0, 255, 65, 0.2);
+  --shadow-neo-inset: inset 0 0 5px rgba(0, 255, 65, 0.1);
+}
+
+/* ==========================================================================
+   物理材质映射 (Utilities)
+   ========================================================================== */
+@layer utilities {
+  /* 隐藏滚动条但保持功能 */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .neo-convex {
+    background-color: var(--color-card);
+    box-shadow: var(--shadow-neo-flat);
+    backdrop-filter: blur(var(--glass-blur, 0px));
+    border: 1px solid var(--glass-border, transparent);
+    @apply transition-all duration-300;
+  }
+
+  .neo-concave {
+    background-color: var(--color-card);
+    box-shadow: var(--shadow-neo-inset);
+    backdrop-filter: blur(var(--glass-blur, 0px));
+    @apply transition-all duration-300;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased transition-colors duration-500;
+  }
+}

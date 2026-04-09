@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(dir D:\\\\Users\\\\zhangkai\\\\IdeaProjects\\\\llm-orchestration-platform\\\\llm-frontend\\\\src:*)",
+      "Bash(cmd:*)",
+      "Bash(npx vite:*)",
+      "Bash(node ./node_modules/vite/bin/vite.js build)",
+      "Bash(where.exe node:*)",
+      "Bash(where.exe npm:*)",
+      "Bash(\"/c/Program Files/nodejs/node.exe\" --version)",
+      "Bash(\"D:/devApps/nodejs/node.exe\" --version)",
+      "Bash(/c/Users/zhangkai/AppData/Roaming/nvm/nvm.exe list:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(/c/WINDOWS/system32/cmd.exe:*)",
+      "Bash(D:/Users/zhangkai/AppData/Local/Programs/cursor/resources/app/resources/helpers/node.exe:*)",
+      "Bash(export PATH=\"D:/Users/zhangkai/AppData/Local/Programs/cursor/resources/app/resources/helpers:$PATH\")"
+    ]
+  }
+}

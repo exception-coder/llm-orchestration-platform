@@ -1,0 +1,83 @@
+/**
+ * components-reset.css
+ * 核心逻辑：强制抹平 Element Plus 内部的所有“违和样式”，将它们全部映射到我们的风格令牌。
+ */
+
+/* --- 1. 统一表单容器 (Input, Select, Cascader) --- */
+.el-input__wrapper, 
+.el-select__wrapper, 
+.el-textarea__inner,
+.el-input-number__increase,
+.el-input-number__decrease {
+  background-color: var(--app-bg-card) !important;
+  box-shadow: var(--app-shadow-inset) !important; /* 拟物化下会凹陷，玻璃模式下透明 */
+  border: 1px solid var(--app-glass-border) !important;
+  backdrop-filter: blur(var(--app-blur-glass));
+  color: var(--app-text-main) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 焦点状态 */
+.el-input__wrapper.is-focus, 
+.el-select__wrapper.is-focused {
+  box-shadow: var(--app-shadow-base) !important; /* 获得焦点时“浮起”或产生发光 */
+  border-color: var(--app-color-primary) !important;
+}
+
+/* --- 2. 统一按钮风格 --- */
+.el-button {
+  background-color: var(--app-bg-card) !important;
+  border: 1px solid var(--app-glass-border) !important;
+  box-shadow: var(--app-shadow-base) !important;
+  backdrop-filter: blur(var(--app-blur-glass));
+  color: var(--app-text-regular) !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.el-button--primary {
+  background-color: var(--app-color-primary) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+/* 拟物化下的按钮按下效果 */
+.el-button:active {
+  box-shadow: var(--app-shadow-inset) !important;
+  transform: translateY(1px);
+}
+
+/* --- 3. 统一弹窗与下拉菜单 (最容易漏的地方) --- */
+.el-popper, 
+.el-dropdown-menu, 
+.el-select__popper,
+.el-message-box,
+.el-dialog {
+  background-color: var(--app-bg-card) !important;
+  backdrop-filter: blur(calc(var(--app-blur-glass) * 2)) !important;
+  border: 1px solid var(--app-glass-border) !important;
+  box-shadow: var(--app-shadow-deep) !important;
+  border-radius: var(--app-radius-base) !important;
+}
+
+.el-select-dropdown__item.is-hovering {
+  background-color: var(--app-sidebar-hover-bg) !important;
+}
+
+/* --- 4. 统一布局背景 --- */
+.el-aside, .el-header, .el-main {
+  background: transparent !important; /* 露出底层的 Page Background */
+}
+
+/* --- 5. 针对拟物化的特殊修正 --- */
+[data-theme='neomorph'] .el-input__wrapper,
+[data-theme='neomorph'] .el-select__wrapper,
+[data-theme='neomorph'] .el-textarea__inner {
+  border: none !important;
+  background-color: var(--app-bg-page) !important;
+}
+
+[data-theme='neomorph'] .el-button--primary {
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.1), -3px -3px 6px rgba(255,255,255,0.8) !important;
+  color: var(--app-text-main) !important;
+}

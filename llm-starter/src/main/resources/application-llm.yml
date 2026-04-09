@@ -2,8 +2,8 @@
 
 llm:
   # 默认配置
-  default-provider: ${LLM_DEFAULT_PROVIDER:alibaba}
-  default-model: ${LLM_DEFAULT_MODEL:qwen-plus}
+  default-provider: ${LLM_DEFAULT_PROVIDER:zhipu}
+  default-model: ${LLM_DEFAULT_MODEL:glm-5.1}
 
   # 阿里云百炼配置（通义千问 / DeepSeek 等）
   alibaba:

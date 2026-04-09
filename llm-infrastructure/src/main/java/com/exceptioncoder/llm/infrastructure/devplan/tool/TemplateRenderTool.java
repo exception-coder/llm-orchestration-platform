@@ -15,6 +15,13 @@ import java.util.Map;
  *
  * <p>模板内置为 Java 常量，后续可迁移到 prompt_template 表。
  *
+ * <p><b>归属智能体：</b>开发计划智能体（devplan）
+ * <br><b>归属 Agent：</b>方案架构师（devplan-solution-architect）
+ * <br><b>调用阶段：</b>第三阶段 — 方案设计
+ * <br><b>业务场景：</b>方案架构师完成分析后，使用预定义模板（STANDARD / LIGHTWEIGHT）
+ * 将设计文档结构化输出。模板包含功能背景、接口设计、类设计、数据库设计等章节占位符，
+ * LLM 填充内容后生成规范统一的设计文档，确保团队产出文档格式一致。
+ *
  * @author zhangkai
  * @since 2026-04-07
  */

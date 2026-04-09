@@ -1,5 +1,8 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
+import com.exceptioncoder.llm.domain.devplan.analysis.EmbeddingText;
+import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzer;
+import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzerRegistry;
 import com.exceptioncoder.llm.domain.devplan.model.CodeIndexStatus;
 import com.exceptioncoder.llm.domain.devplan.repository.CodeIndexStatusRepository;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
@@ -10,20 +13,24 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * 代码向量索引工具 -- 将项目 Java 源文件按类级别向量化到 Qdrant。
+ * 代码向量索引工具 -- 委托 {@link LanguageAnalyzer} SPI 提取嵌入文本，写入 Qdrant。
  *
- * <p>索引粒度：类级别，embedding = Javadoc + 类声明 + public 方法签名。
- * 索引去重：基于 file_hash 判断是否需要重建。
+ * <p>替代原正则提取嵌入文本方案，通过 JavaParser AST 精确提取
+ * Javadoc + 类声明 + public 方法签名，生成更高质量的向量索引。
+ *
+ * <p><b>归属智能体：</b>开发计划智能体（devplan）
+ * <br><b>归属 Agent：</b>代码感知分析专家（devplan-code-awareness）
+ * <br><b>调用阶段：</b>第一阶段 — 代码感知，在结构扫描完成后调用
+ * <br><b>业务场景：</b>将项目源码按类级别向量化写入 Qdrant，为后续需求分析和方案设计阶段
+ * 提供语义搜索能力。需求分析专家和方案架构师通过 code_search 检索相关类时，
+ * 依赖本工具预先建立的向量索引。
  *
  * @author zhangkai
  * @since 2026-04-07
@@ -34,17 +41,15 @@ public class CodeIndexTool {
 
     private final VectorStore vectorStore;
     private final CodeIndexStatusRepository indexStatusRepository;
+    private final LanguageAnalyzerRegistry analyzerRegistry;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final Pattern JAVADOC_PATTERN = Pattern.compile("/\\*\\*([\\s\\S]*?)\\*/\\s*(?:@\\w+\\s*(?:\\([^)]*\\)\\s*)*)*(?:public|protected)\\s+(?:abstract\\s+)?(?:class|interface|enum|record)", Pattern.MULTILINE);
-    private static final Pattern CLASS_DECL_PATTERN = Pattern.compile("^public\\s+(?:abstract\\s+)?(?:class|interface|enum|record)\\s+.+$", Pattern.MULTILINE);
-    private static final Pattern PUBLIC_METHOD_PATTERN = Pattern.compile("^\\s+public\\s+(?:static\\s+)?[\\w<>\\[\\],\\s]+?\\s+\\w+\\s*\\([^)]*\\)", Pattern.MULTILINE);
-    private static final Pattern PACKAGE_PATTERN = Pattern.compile("^package\\s+([\\w.]+)\\s*;", Pattern.MULTILINE);
-    private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("^public\\s+(?:abstract\\s+)?(?:class|interface|enum|record)\\s+(\\w+)", Pattern.MULTILINE);
-
-    public CodeIndexTool(VectorStore vectorStore, CodeIndexStatusRepository indexStatusRepository) {
+    public CodeIndexTool(VectorStore vectorStore,
+                         CodeIndexStatusRepository indexStatusRepository,
+                         LanguageAnalyzerRegistry analyzerRegistry) {
         this.vectorStore = vectorStore;
         this.indexStatusRepository = indexStatusRepository;
+        this.analyzerRegistry = analyzerRegistry;
     }
 
     @Tool(name = "devplan_code_index", description = "将项目Java源文件向量化索引到Qdrant", tags = {"devplan", "index"})
@@ -81,31 +86,19 @@ public class CodeIndexTool {
             indexStatusRepository.save(new CodeIndexStatus(
                     projectPath, collectionName, 0, "INDEXING", null, fileHash));
 
+            // 委托 LanguageAnalyzer 提取嵌入文本
             List<Document> documents = new ArrayList<>();
-            Files.walkFileTree(root, new SimpleFileVisitor<>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    if (!file.toString().endsWith(".java")) return FileVisitResult.CONTINUE;
-                    if (file.toString().contains("/test/")) return FileVisitResult.CONTINUE;
-
-                    String content = Files.readString(file);
-                    String embeddingText = extractEmbeddingText(content);
-                    if (embeddingText.isBlank()) return FileVisitResult.CONTINUE;
-
-                    String packageName = extractPackage(content);
-                    String className = extractClassName(content);
-                    String relativePath = root.relativize(file).toString();
-
-                    Map<String, Object> metadata = new HashMap<>();
-                    metadata.put("filePath", relativePath);
-                    metadata.put("className", className != null ? className : "Unknown");
-                    metadata.put("packageName", packageName != null ? packageName : "");
+            Optional<LanguageAnalyzer> analyzer = analyzerRegistry.detect(root);
+            if (analyzer.isPresent()) {
+                List<EmbeddingText> texts = analyzer.get().extractEmbeddingTexts(root);
+                for (EmbeddingText et : texts) {
+                    Map<String, Object> metadata = new HashMap<>(et.metadata());
                     metadata.put("projectPath", projectPath);
-
-                    documents.add(new Document(embeddingText, metadata));
-                    return FileVisitResult.CONTINUE;
+                    documents.add(new Document(et.text(), metadata));
                 }
-            });
+            } else {
+                log.warn("未匹配分析器，跳过嵌入文本提取: {}", projectPath);
+            }
 
             // 批量写入 VectorStore
             if (!documents.isEmpty()) {
@@ -135,48 +128,24 @@ public class CodeIndexTool {
         }
     }
 
-    private String extractEmbeddingText(String content) {
-        StringBuilder sb = new StringBuilder();
-
-        // Javadoc
-        Matcher javadocMatcher = JAVADOC_PATTERN.matcher(content);
-        if (javadocMatcher.find()) {
-            sb.append(javadocMatcher.group(1).replaceAll("\\s*\\*\\s*", " ").trim()).append("\n");
-        }
-
-        // 类声明
-        Matcher classDeclMatcher = CLASS_DECL_PATTERN.matcher(content);
-        if (classDeclMatcher.find()) {
-            sb.append(classDeclMatcher.group().trim()).append("\n");
-        }
-
-        // public 方法签名
-        Matcher methodMatcher = PUBLIC_METHOD_PATTERN.matcher(content);
-        while (methodMatcher.find()) {
-            sb.append(methodMatcher.group().trim()).append("\n");
-        }
-
-        return sb.toString();
-    }
-
-    private String extractPackage(String content) {
-        Matcher m = PACKAGE_PATTERN.matcher(content);
-        return m.find() ? m.group(1) : null;
-    }
-
-    private String extractClassName(String content) {
-        Matcher m = CLASS_NAME_PATTERN.matcher(content);
-        return m.find() ? m.group(1) : null;
-    }
-
     private String computeProjectHash(Path root) throws Exception {
         MessageDigest md = MessageDigest.getInstance("MD5");
         Files.walkFileTree(root, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if (file.toString().endsWith(".java") && !file.toString().contains("/test/")) {
-                    md.update(file.toString().getBytes());
+                String path = file.toString().replace('\\', '/');
+                if (path.endsWith(".java") && !path.contains("/test/")) {
+                    md.update(path.getBytes());
                     md.update(Long.toString(attrs.size()).getBytes());
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                String name = dir.getFileName().toString();
+                if (name.equals("target") || name.equals("build") || name.equals(".git")) {
+                    return FileVisitResult.SKIP_SUBTREE;
                 }
                 return FileVisitResult.CONTINUE;
             }

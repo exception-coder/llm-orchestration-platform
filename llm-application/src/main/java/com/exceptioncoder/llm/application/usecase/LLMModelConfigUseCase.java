@@ -36,6 +36,17 @@ public class LLMModelConfigUseCase {
     }
     
     /**
+     * 获取所有平台（Provider）及其模型数量
+     */
+    public List<ProviderInfo> getAllProviders() {
+        return modelConfigRepository.findAllEnabled().stream()
+                .collect(Collectors.groupingBy(LLMModelConfig::getProvider, Collectors.counting()))
+                .entrySet().stream()
+                .map(e -> new ProviderInfo(e.getKey(), e.getValue().intValue()))
+                .toList();
+    }
+
+    /**
      * 根据提供商获取模型
      */
     public List<ModelInfo> getModelsByProvider(String provider) {
@@ -106,6 +117,11 @@ public class LLMModelConfigUseCase {
         private Integer sortOrder;
     }
     
+    /**
+     * 平台信息 VO
+     */
+    public record ProviderInfo(String provider, int modelCount) {}
+
     /**
      * 模型创建请求
      */

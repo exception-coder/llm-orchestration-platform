@@ -1,110 +1,199 @@
 <template>
-  <div class="doc-viewer">
-    <el-container class="doc-container">
-      <!-- 左侧目录树 -->
-      <el-aside width="280px" class="doc-sidebar">
-        <div class="sidebar-header">
-          <span class="sidebar-title">📚 文档中心</span>
-          <el-input
+  <div class="h-full flex flex-col lg:flex-row gap-8 overflow-hidden">
+    
+    <!-- 1. 物理目录侧边栏 (Neomorphic Sidebar) -->
+    <aside 
+      class="w-full lg:w-80 flex flex-col shrink-0 transition-all duration-500"
+      :class="[isMobile && currentDoc ? 'hidden' : 'flex']"
+    >
+      <!-- 搜索槽位 (Deep Inset) -->
+      <div class="p-6 neo-convex rounded-[2.5rem] mb-6">
+        <div class="relative neo-concave rounded-2xl p-1 flex items-center group transition-all focus-within:ring-2 ring-primary/20">
+          <div class="pl-4 text-foreground/30"><Search :size="16" /></div>
+          <input 
             v-model="searchKeyword"
-            placeholder="AI 语义检索..."
-            size="small"
-            clearable
+            placeholder="语义检索文档..."
             @keyup.enter="handleSearch"
-            style="margin-top:8px"
+            class="w-full bg-transparent border-none focus:outline-none px-3 py-3 text-xs placeholder:text-foreground/20"
+          />
+          <button 
+            @click="handleSearch"
+            :disabled="searchLoading"
+            class="p-2 mr-1 rounded-xl neo-convex text-primary active:scale-90 transition-all"
           >
-            <template #append>
-              <el-button :icon="Search" @click="handleSearch" :loading="searchLoading" />
-            </template>
-          </el-input>
+            <ArrowRight v-if="!searchLoading" :size="16" />
+            <Loader2 v-else :size="16" class="animate-spin" />
+          </button>
         </div>
+      </div>
 
-        <!-- 搜索结果 -->
-        <div v-if="searchResults.length > 0" class="search-results">
-          <div class="section-label">搜索结果</div>
-          <div
-            v-for="hit in searchResults"
+      <!-- 目录内容区 (Concave Track) -->
+      <div class="flex-1 neo-concave rounded-[2.5rem] p-4 overflow-y-auto overflow-x-hidden space-y-2">
+        
+        <!-- 搜索结果模式 -->
+        <template v-if="searchResults.length > 0">
+          <div class="px-4 py-2 flex items-center justify-between">
+            <span class="text-[10px] font-black tracking-widest text-primary opacity-60">SEARCH HITS</span>
+            <button @click="clearSearch" class="text-[10px] font-bold text-foreground/40 hover:text-primary transition-colors">CLEAR</button>
+          </div>
+          <div 
+            v-for="hit in searchResults" 
             :key="hit.path"
-            class="search-hit"
             @click="loadDoc(hit.path)"
+            class="p-4 rounded-2xl hover:bg-foreground/5 cursor-pointer transition-all border border-transparent hover:border-white/10 group"
           >
-            <el-icon><Document /></el-icon>
-            <div class="hit-info">
-              <div class="hit-name">{{ hit.name }}</div>
-              <div class="hit-content">{{ hit.content }}</div>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 neo-convex rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <FileText :size="16" />
+              </div>
+              <div class="flex-1 overflow-hidden">
+                <p class="text-xs font-bold truncate">{{ hit.name }}</p>
+                <p class="text-[10px] text-foreground/40 truncate mt-1">{{ hit.content }}</p>
+              </div>
             </div>
           </div>
-          <el-button link size="small" @click="clearSearch" style="margin-top:4px">清除搜索</el-button>
-        </div>
+        </template>
 
-        <!-- 目录树 -->
-        <div v-else>
-          <el-skeleton v-if="treeLoading" :rows="6" animated style="padding:16px" />
-          <el-tree
-            v-else
-            :data="treeData"
-            :props="treeProps"
-            @node-click="handleNodeClick"
-            default-expand-all
-            highlight-current
-            class="doc-tree"
-          >
-            <template #default="{ node, data }">
-              <span class="tree-node">
-                <el-icon v-if="data.type === 'DIRECTORY'"><FolderOpened /></el-icon>
-                <el-icon v-else><Document /></el-icon>
-                <span class="node-label">{{ data.name }}</span>
-              </span>
-            </template>
-          </el-tree>
-        </div>
-      </el-aside>
-
-      <!-- 右侧内容区 -->
-      <el-main class="doc-main">
-        <div v-if="!currentDoc" class="doc-welcome">
-          <el-empty description="请从左侧选择文档">
-            <template #image>
-              <el-icon style="font-size:64px;color:#c0c4cc"><Document /></el-icon>
-            </template>
-          </el-empty>
-        </div>
-
-        <div v-else class="doc-content-wrapper">
-          <div class="doc-toolbar">
-            <span class="doc-path">{{ currentDoc.path }}</span>
-            <el-button size="small" @click="currentDoc = null">
-              <el-icon><Close /></el-icon>
-            </el-button>
+        <!-- 目录树模式 -->
+        <template v-else>
+          <div v-if="treeLoading" class="p-4 space-y-4">
+            <div v-for="i in 5" :key="i" class="h-10 w-full neo-convex rounded-xl animate-pulse opacity-50"></div>
           </div>
-          <el-skeleton v-if="contentLoading" :rows="15" animated style="padding:24px" />
-          <div
-            v-else
-            class="markdown-body"
-            ref="markdownRef"
-            v-html="renderedContent"
-          />
+          <div v-else class="space-y-1">
+            <TreeItem 
+              v-for="item in treeData" 
+              :key="item.path" 
+              :item="item" 
+              @select="loadDoc"
+              :current-path="currentDoc?.path"
+            />
+          </div>
+        </template>
+      </div>
+    </aside>
+
+    <!-- 2. 文档展示核心 (Convex Display Panel) -->
+    <main 
+      class="flex-1 flex flex-col min-w-0 transition-all duration-500"
+      :class="[isMobile && !currentDoc ? 'hidden' : 'flex']"
+    >
+      <!-- 未选择状态 -->
+      <div v-if="!currentDoc" class="flex-1 flex items-center justify-center">
+        <div class="neo-convex p-16 rounded-[4rem] text-center space-y-6 max-w-sm" v-motion-pop>
+          <div class="w-24 h-24 neo-concave rounded-[2rem] mx-auto flex items-center justify-center text-foreground/10">
+            <Library :size="48" />
+          </div>
+          <div>
+            <h3 class="text-xl font-black tracking-tight text-foreground/60">知识库中心</h3>
+            <p class="text-sm text-foreground/30 mt-2 leading-relaxed">请从左侧轨道中选择一个文档进行深度阅读</p>
+          </div>
         </div>
-      </el-main>
-    </el-container>
+      </div>
+
+      <!-- 文档内容状态 -->
+      <div v-else class="flex-1 flex flex-col neo-convex rounded-[3rem] overflow-hidden" v-motion-slide-visible-right>
+        <!-- 工具栏 (Glass Header) -->
+        <header class="h-16 flex items-center px-8 border-b border-white/5 bg-white/5 backdrop-blur-md">
+          <button 
+            v-if="isMobile" 
+            @click="currentDoc = null"
+            class="mr-4 w-8 h-8 neo-convex rounded-full flex items-center justify-center text-foreground/60 active:scale-90"
+          >
+            <ChevronLeft :size="18" />
+          </button>
+          <span class="text-[10px] font-black tracking-[0.2em] text-foreground/30 truncate flex-1">
+            {{ currentDoc.path }}
+          </span>
+          <div class="flex items-center gap-2">
+            <button class="w-8 h-8 neo-convex rounded-full flex items-center justify-center text-foreground/40 hover:text-primary transition-colors">
+              <Share2 :size="14" />
+            </button>
+            <button @click="currentDoc = null" class="w-8 h-8 neo-convex rounded-full flex items-center justify-center text-red-500/40 hover:text-red-500 transition-colors">
+              <X :size="14" />
+            </button>
+          </div>
+        </header>
+
+        <!-- Markdown 内容区 -->
+        <div class="flex-1 overflow-y-auto p-12 scroll-smooth">
+          <div v-if="contentLoading" class="space-y-6">
+            <div class="h-12 w-2/3 neo-concave rounded-2xl animate-pulse"></div>
+            <div class="space-y-3">
+              <div v-for="i in 10" :key="i" :class="['h-4 neo-concave rounded-full animate-pulse opacity-40', i % 3 === 0 ? 'w-full' : 'w-5/6']"></div>
+            </div>
+          </div>
+          <article 
+            v-else
+            ref="markdownRef"
+            class="markdown-rendered prose prose-slate dark:prose-invert max-w-none"
+            v-html="renderMarkdown(currentDoc.content)"
+          ></article>
+        </div>
+      </div>
+    </main>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
+import { 
+  Search, FileText, Folder, FolderOpen, 
+  Library, ChevronLeft, X, Share2, ArrowRight, Loader2, ChevronRight
+} from 'lucide-vue-next'
+import { docViewerAPI } from '@/api'
+import { useMarkdown } from '@/composables/useMarkdown'
+import { useResponsive } from '@/composables/useResponsive'
 import { ElMessage } from 'element-plus'
-import { marked } from 'marked'
-import mermaid from 'mermaid'
-import { docViewerAPI } from '@/api/index.js'
-import { Search } from '@element-plus/icons-vue'
 
-// mermaid 初始化
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose'
-})
+const { renderMarkdown } = useMarkdown()
+const { isMobile } = useResponsive()
 
+// ---- 子组件：树形项目 (为了逻辑纯净建议抽离，这里先内联处理逻辑) ----
+const TreeItem = {
+  name: 'TreeItem',
+  props: ['item', 'currentPath', 'depth'],
+  emits: ['select'],
+  setup(props, { emit }) {
+    const isOpen = ref(true)
+    const toggle = () => { if (props.item.type === 'DIRECTORY') isOpen.value = !isOpen.value }
+    const select = () => { if (props.item.type === 'FILE') emit('select', props.item.path) }
+    
+    return { isOpen, toggle, select }
+  },
+  template: `
+    <div class="select-none">
+      <div 
+        @click="item.type === 'DIRECTORY' ? toggle() : select()"
+        class="flex items-center gap-3 px-4 py-2 rounded-2xl cursor-pointer transition-all duration-200 group"
+        :class="[
+          currentPath === item.path ? 'neo-convex text-primary font-bold z-10' : 'hover:bg-foreground/5 text-foreground/60'
+        ]"
+        :style="{ marginLeft: (depth || 0) * 12 + 'px' }"
+      >
+        <div class="shrink-0 transition-transform group-hover:scale-110">
+          <Folder v-if="item.type === 'DIRECTORY' && !isOpen" :size="16" class="opacity-40" />
+          <FolderOpen v-else-if="item.type === 'DIRECTORY' && isOpen" :size="16" class="text-primary/60" />
+          <FileText v-else :size="16" :class="currentPath === item.path ? 'text-primary' : 'opacity-40'" />
+        </div>
+        <span class="text-xs truncate flex-1">{{ item.name }}</span>
+        <ChevronRight v-if="item.type === 'DIRECTORY'" :size="12" class="transition-transform opacity-20" :class="{ 'rotate-90': isOpen }" />
+      </div>
+      <div v-if="isOpen && item.children" class="mt-1">
+        <TreeItem 
+          v-for="child in item.children" 
+          :key="child.path" 
+          :item="child" 
+          :depth="(depth || 0) + 1"
+          :current-path="currentPath"
+          @select="$emit('select', $event)"
+        />
+      </div>
+    </div>
+  `
+}
+
+// ---- 主逻辑 ----
 const treeData = ref([])
 const treeLoading = ref(true)
 const currentDoc = ref(null)
@@ -114,267 +203,89 @@ const searchResults = ref([])
 const searchLoading = ref(false)
 const markdownRef = ref(null)
 
-const treeProps = {
-  children: 'children',
-  label: 'name'
-}
-
-const renderedContent = computed(() => {
-  if (!currentDoc.value) return ''
-  return marked(currentDoc.value.content)
-})
-
-onMounted(() => {
-  loadTree()
-})
-
-watch(renderedContent, async () => {
-  await nextTick()
-  renderMermaid()
-})
-
-async function loadTree() {
+const loadTree = async () => {
   try {
-    const result = await docViewerAPI.getTree()
-    treeData.value = result.items || []
-  } catch (e) {
-    ElMessage.error('加载目录树失败')
+    const res = await docViewerAPI.getTree()
+    treeData.value = res.items || []
+  } catch (err) {
+    ElMessage.error('目录获取失败')
   } finally {
     treeLoading.value = false
   }
 }
 
-async function loadDoc(path) {
+const loadDoc = async (path) => {
   contentLoading.value = true
   try {
     const doc = await docViewerAPI.getContent(path)
     currentDoc.value = doc
-  } catch (e) {
-    ElMessage.error('加载文档失败')
+    searchResults.value = [] // 选中即清空搜索
+    await nextTick()
+    renderMermaid()
+  } catch (err) {
+    ElMessage.error('文档读取失败')
   } finally {
     contentLoading.value = false
   }
 }
 
-function handleNodeClick(data) {
-  if (data.type === 'FILE') {
-    loadDoc(data.path)
-  }
-}
-
-async function handleSearch() {
-  const keyword = searchKeyword.value.trim()
-  if (!keyword) return
+const handleSearch = async () => {
+  if (!searchKeyword.value.trim()) return
   searchLoading.value = true
   try {
-    const result = await docViewerAPI.search(keyword)
-    searchResults.value = result.hits || []
-    if (searchResults.value.length === 0) {
-      ElMessage.info('未找到相关文档')
-    }
-  } catch (e) {
-    if (e.message && e.message.includes('503')) {
-      ElMessage.warning('检索服务不可用，请确保 Qdrant 已启动')
-    } else {
-      ElMessage.error('检索失败')
-    }
+    const res = await docViewerAPI.search(searchKeyword.value)
+    searchResults.value = res.hits || []
+  } catch (err) {
+    ElMessage.error('搜索服务异常')
   } finally {
     searchLoading.value = false
   }
 }
 
-function clearSearch() {
+const clearSearch = () => {
   searchKeyword.value = ''
   searchResults.value = []
 }
 
-async function renderMermaid() {
+// Mermaid 处理 (保持逻辑一致)
+let mermaid = null
+const renderMermaid = async () => {
   if (!markdownRef.value) return
+  if (!mermaid) {
+    try {
+      const mod = await Function('return import("mermaid")')()
+      mermaid = mod.default
+      mermaid.initialize({ startOnLoad: false, theme: 'default' })
+    } catch { return }
+  }
   const blocks = markdownRef.value.querySelectorAll('code.language-mermaid')
   for (const block of blocks) {
-    try {
-      const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
-      const source = block.textContent
-      const { svg } = await mermaid.render(id, source)
-      const container = document.createElement('div')
-      container.className = 'mermaid-container'
-      container.innerHTML = svg
-      block.parentElement.replaceWith(container)
-    } catch (e) {
-      console.warn('Mermaid 渲染失败:', e)
-    }
+    const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
+    const { svg } = await mermaid.render(id, block.textContent)
+    const container = document.createElement('div')
+    container.className = 'my-8 flex justify-center bg-white/5 p-8 rounded-[2rem] neo-concave'
+    container.innerHTML = svg
+    block.parentElement.replaceWith(container)
   }
 }
+
+onMounted(loadTree)
 </script>
 
 <style scoped>
-.doc-viewer {
-  height: 100%;
-  padding: 0;
-  box-sizing: border-box;
-}
-.doc-container {
-  height: 100%;
-}
-.doc-sidebar {
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid #e4e7ed;
-  background: #fff;
-  overflow-y: auto;
-}
-.sidebar-header {
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
-}
-.sidebar-title {
-  font-weight: 600;
-  font-size: 15px;
-  color: #303133;
-}
-.doc-tree {
-  padding: 8px;
-}
-.tree-node {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-}
-.node-label {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.section-label {
-  font-size: 11px;
-  color: #909399;
-  padding: 8px 16px 4px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.search-results {
-  padding: 4px 0;
-}
-.search-hit {
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px;
-  cursor: pointer;
-  border-bottom: 1px solid #f5f5f5;
-}
-.search-hit:hover {
-  background: #f5f7fa;
-}
-.hit-info { flex: 1; overflow: hidden; }
-.hit-name { font-size: 13px; font-weight: 500; color: #303133; }
-.hit-content {
-  font-size: 11px;
-  color: #909399;
-  margin-top: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.doc-main {
-  padding: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  background: #f8f9fa;
-}
-.doc-welcome {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-.doc-content-wrapper {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-.doc-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background: #fff;
-  border-bottom: 1px solid #e4e7ed;
-  font-size: 12px;
-  color: #909399;
-}
-.doc-path { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.markdown-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 32px 48px;
-  background: #fff;
-  font-size: 14px;
-  line-height: 1.8;
-  color: #24292e;
-}
-</style>
+@reference "@/styles/index.css";
 
-<style>
-/* Markdown 全局样式 */
-.markdown-body h1, .markdown-body h2, .markdown-body h3,
-.markdown-body h4, .markdown-body h5, .markdown-body h6 {
-  margin-top: 24px;
-  margin-bottom: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: #1a1a1a;
-}
-.markdown-body h1 { font-size: 28px; border-bottom: 2px solid #e1e4e8; padding-bottom: 8px; }
-.markdown-body h2 { font-size: 22px; border-bottom: 1px solid #e1e4e8; padding-bottom: 6px; }
-.markdown-body h3 { font-size: 18px; }
-.markdown-body p { margin: 12px 0; }
-.markdown-body code {
-  background: #f6f8fa;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 13px;
-  color: #e36209;
-}
-.markdown-body pre {
-  background: #f6f8fa;
-  border-radius: 6px;
-  padding: 16px;
-  overflow-x: auto;
-  margin: 16px 0;
-}
-.markdown-body pre code {
-  background: none;
-  padding: 0;
-  color: #24292e;
-}
-.markdown-body table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 16px 0;
-}
-.markdown-body th, .markdown-body td {
-  border: 1px solid #e1e4e8;
-  padding: 8px 12px;
-  text-align: left;
-}
-.markdown-body th { background: #f6f8fa; font-weight: 600; }
-.markdown-body tr:hover { background: #f8f9fa; }
-.markdown-body blockquote {
-  border-left: 4px solid #0070f3;
-  background: #f0f7ff;
-  padding: 8px 16px;
-  margin: 16px 0;
-  color: #555;
-}
-.markdown-body ul, .markdown-body ol { padding-left: 24px; margin: 8px 0; }
-.markdown-body li { margin: 4px 0; }
-.markdown-body a { color: #0366d6; text-decoration: none; }
-.markdown-body a:hover { text-decoration: underline; }
-.markdown-body hr { border: none; border-top: 1px solid #e1e4e8; margin: 24px 0; }
-.mermaid-container { text-align: center; margin: 24px 0; overflow-x: auto; }
-.mermaid-container svg { max-width: 100%; }
+/* 深度适配 Markdown 物理质感 */
+:deep(.markdown-rendered h1) { @apply text-3xl font-black tracking-tight mb-8 pb-4 border-b border-foreground/5; }
+:deep(.markdown-rendered h2) { @apply text-xl font-bold mt-12 mb-6 text-primary; }
+:deep(.markdown-rendered p) { @apply text-foreground/70 leading-relaxed mb-6; }
+:deep(.markdown-rendered blockquote) { @apply border-l-4 border-primary/20 bg-primary/5 px-6 py-4 rounded-r-2xl italic text-foreground/60 my-8; }
+:deep(.markdown-rendered pre) { @apply shadow-neo-inset bg-card p-8 rounded-[2rem] my-8 overflow-x-auto border border-white/5; }
+:deep(.markdown-rendered code:not(pre code)) { @apply bg-primary/10 text-primary px-2 py-0.5 rounded-lg font-mono text-xs; }
+:deep(.markdown-rendered table) { @apply w-full shadow-neo-inset bg-card rounded-[2rem] overflow-hidden my-8 border-collapse; }
+:deep(.markdown-rendered th) { @apply bg-foreground/5 p-4 text-left text-[10px] font-black uppercase tracking-widest opacity-40; }
+:deep(.markdown-rendered td) { @apply p-4 text-sm border-t border-foreground/5; }
+
+/* 隐藏原生的滚动条以保持拟物感 */
+::-webkit-scrollbar { width: 0px; background: transparent; }
 </style>

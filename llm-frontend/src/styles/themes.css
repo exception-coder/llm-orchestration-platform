@@ -1,0 +1,93 @@
+/**
+ * themes.css - 风格定义层
+ * 核心逻辑：通过修改 --app- 变量的值，改变全局视觉质感。
+ */
+
+/* ==========================================================================
+   1. 玻璃风格 (Glassmorphism)
+   特点：半透明背景、高斯模糊、白色细边框边缘。
+   ========================================================================== */
+[data-theme='glass'] {
+  --app-bg-page: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --app-bg-card: rgba(255, 255, 255, 0.4);
+  --app-bg-overlay: rgba(0, 0, 0, 0.1);
+  --app-blur-glass: 12px;
+  --app-glass-border: rgba(255, 255, 255, 0.2);
+  --app-text-main: #ffffff;
+  --app-text-regular: rgba(255, 255, 255, 0.85);
+  --app-text-secondary: rgba(255, 255, 255, 0.7);
+  --app-sidebar-bg: rgba(0, 0, 0, 0.2);
+  --app-sidebar-hover-bg: rgba(255, 255, 255, 0.1);
+  --app-sidebar-active-bg: rgba(255, 255, 255, 0.2);
+  --app-bubble-ai-bg: rgba(255, 255, 255, 0.3);
+  --app-border-light: rgba(255, 255, 255, 0.2);
+  --app-shadow-base: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+/* ==========================================================================
+   2. 拟物风格 (Neomorphism)
+   特点：背景与元素同色，通过高光阴影和深色阴影营造凸起。
+   ========================================================================== */
+[data-theme='neomorph'] {
+  --app-bg-page: #e0e5ec;
+  --app-bg-card: #e0e5ec;
+  --app-color-primary: #a3b1c6;
+  --app-text-main: #4d375d;
+  --app-text-regular: #44475a;
+  --app-sidebar-bg: #e0e5ec;
+  --app-sidebar-text: #7e8ba0;
+  --app-sidebar-text-active: #4d375d;
+  --app-sidebar-hover-bg: rgba(0, 0, 0, 0.05);
+  --app-sidebar-active-bg: #e0e5ec;
+  --app-sidebar-border: rgba(0, 0, 0, 0.1);
+  --app-bubble-ai-bg: #e0e5ec;
+  --app-bubble-user-bg: #e0e5ec;
+  --app-bubble-user-text: #4d375d;
+  --app-border-light: transparent;
+  
+  /* 拟物化核心：双重阴影 */
+  --app-shadow-base: 9px 9px 16px rgba(163, 177, 198, 0.6), 
+                     -9px -9px 16px rgba(255, 255, 255, 0.5);
+  --app-shadow-inset: inset 2px 2px 5px #babecc, 
+                      inset -5px -5px 10px #ffffff;
+  --app-shadow-deep: 12px 12px 20px rgba(163, 177, 198, 0.7), 
+                     -12px -12px 20px rgba(255, 255, 255, 0.6);
+}
+
+/* ==========================================================================
+   3. 赛博风格 (Cyberpunk)
+   特点：深黑背景、荧光青色、红色边框。
+   ========================================================================== */
+[data-theme='cyber'] {
+  --app-bg-page: #050505;
+  --app-bg-card: #121212;
+  --app-color-primary: #00ffff;
+  --app-color-primary-light: #ff00ff;
+  --app-text-main: #00ff00;
+  --app-text-regular: #00cc00;
+  --app-sidebar-bg: #000;
+  --app-sidebar-active-bg: rgba(0, 255, 255, 0.1);
+  --app-border-light: #ff00ff;
+  --app-shadow-base: 0 0 10px #00ffff;
+}
+
+/* --- 全局组件映射 (接管 Element Plus) --- */
+.el-card, .el-input__wrapper, .el-button--default, .el-menu {
+  background: var(--app-bg-card) !important;
+  backdrop-filter: blur(var(--app-blur-glass));
+  border: 1px solid var(--app-glass-border) !important;
+  box-shadow: var(--app-shadow-base) !important;
+  transition: all 0.3s ease-in-out;
+}
+
+/* 按钮点击反馈 */
+.el-button:active {
+  box-shadow: var(--app-shadow-inset) !important;
+  transform: translateY(1px);
+}
+
+/* 拟物化模式下的特殊调整 */
+[data-theme='neomorph'] .el-input__wrapper {
+  box-shadow: var(--app-shadow-inset) !important;
+  border: none !important;
+}

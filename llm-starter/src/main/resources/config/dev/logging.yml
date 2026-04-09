@@ -7,6 +7,19 @@ logging:
     
     # Spring AI 日志
     org.springframework.ai: DEBUG
+    # Spring AI OpenAI 客户端（智谱走 OpenAI 兼容协议）— 打印模型选择、重试等逻辑
+    org.springframework.ai.openai: DEBUG
+    # Spring AI Alibaba DashScope — 打印 DashScope 请求构建过程
+    com.alibaba.cloud.ai: DEBUG
+
+    # HTTP 请求/响应日志（Spring RestClient）
+    # DEBUG：打印请求方法、URL、状态码
+    # TRACE：额外打印完整的请求/响应 body（含 prompt 和 completion 内容，注意日志量较大）
+    org.springframework.web.client.RestClient: DEBUG
+    # HTTP 请求/响应 body 完整内容（含 prompt 和 completion 原文，日志量大，按需开启）
+    # org.springframework.http.client: TRACE
+    # JDK HttpClient 底层连接日志（排查连接超时、SSL 等问题时开启）
+    # jdk.internal.net.http: DEBUG
     
     # LangChain4j 日志
     dev.langchain4j: DEBUG

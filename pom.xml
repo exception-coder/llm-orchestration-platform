@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.4.5</version>
         <relativePath/>
     </parent>
 
@@ -35,18 +35,17 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
         <!--
-            spring-ai-alibaba 版本历史：
-            - 原版本 1.0.0.0 未发布到 Maven Central，仅存在于私有/快照仓库，
-              导致 Nexus 镜像拉取失败并缓存错误记录，后续构建持续报
-              'Non-resolvable import POM' 错误。
-            - 升级至 1.0.0.4，该版本已正式发布到 Maven Central，
-              与 spring-ai 1.0.0-M4 + spring-boot 3.2.2 兼容。
+            版本组合：spring-boot 3.4.5 + spring-ai 1.0.1 + spring-ai-alibaba 1.0.0.4
+            - spring-ai-alibaba 1.0.0.4 编译依赖 spring-ai 1.0.1（GA），
+              需要 Spring Framework 6.2.x，对应 Spring Boot 3.3+。
+            - spring-ai 1.0.0-M4 已废弃，其 auto-configuration 包路径与 GA 版不同，
+              同时使用会导致 chatClientBuilderConfigurer Bean 重复注册。
         -->
-        <spring-ai.version>1.0.0-M4</spring-ai.version>
+        <spring-ai.version>1.0.1</spring-ai.version>
         <spring-ai-alibaba.version>1.0.0.4</spring-ai-alibaba.version>
         <lombok.version>1.18.30</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <spring-cloud-bootstrap.version>4.1.0</spring-cloud-bootstrap.version>
+        <spring-cloud-bootstrap.version>4.2.0</spring-cloud-bootstrap.version>
     </properties>
 
     <dependencyManagement>
@@ -141,26 +140,6 @@
             </snapshots>
         </repository>
         
-        <!-- Spring Milestones（Spring AI 需要） -->
-        <repository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-
-        <!-- Spring Snapshots -->
-        <repository>
-            <id>spring-snapshots</id>
-            <name>Spring Snapshots</name>
-            <url>https://repo.spring.io/snapshot</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-
         <!-- Maven Central（兜底） -->
         <repository>
             <id>central</id>

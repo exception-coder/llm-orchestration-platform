@@ -73,3 +73,10 @@
 - 摘要：PLAN_REVIEWER Agent 完整设计 — 无外部 Tool，使用 PlanSensor 传感器链（计算型 + 推理型 + 聚合型）进行方案评审
 - 大纲：技术选型决策 / Tool vs Sensor 对比 / 角色定位 / Sensor Chain 设计 / System Prompt / State 交互 / Agent 注册 / 类清单
 - 归属原因：StateGraph 第四站 ReviewNode 的 Agent 实现
+
+### 平台管理接口补全（子模块）
+
+- 文件：`通用智能体架构/平台管理接口补全/平台管理接口补全-20260409-v1.md`
+- 摘要：补全 5 大管理对象的关联查询接口 — Graph 下 Agent 列表、调用链视图、Agent 下 Tool 详情、模型平台清单
+- 大纲：背景与目标 / 功能范围 / 4 个新增 GET 接口设计 / 类设计（3 Controller + 3 UseCase 改造）/ 核心业务规则
+- 归属原因：管理接口操作的对象（Graph/Agent/Tool/ModelConfig）全部定义在通用智能体架构中

@@ -14,6 +14,13 @@ import java.util.stream.Stream;
  *
  * <p>安全约束：路径必须在项目目录下，防止路径遍历攻击。
  *
+ * <p><b>归属智能体：</b>开发计划智能体（devplan）
+ * <br><b>归属 Agent：</b>需求分析专家（devplan-requirement-analyzer）
+ * <br><b>调用阶段：</b>第二阶段 — 需求分析
+ * <br><b>业务场景：</b>需求分析专家通过 code_search 定位到相关类后，需要读取具体代码
+ * 确认类的实现细节、方法签名、注解配置等。用于精确判断需求变更的影响范围，
+ * 而非仅依赖向量搜索返回的摘要信息。
+ *
  * @author zhangkai
  * @since 2026-04-07
  */

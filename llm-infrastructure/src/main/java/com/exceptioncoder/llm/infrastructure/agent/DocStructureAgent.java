@@ -3,6 +3,7 @@ package com.exceptioncoder.llm.infrastructure.agent;
 import com.alibaba.cloud.ai.dashscope.api.DashScopeApi;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
+import com.exceptioncoder.llm.domain.service.DocStructureService;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolExecutor;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolRegistryImpl;
 import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
@@ -11,8 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -25,7 +30,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class DocStructureAgent {
+public class DocStructureAgent implements DocStructureService {
 
     private static final String SYSTEM_PROMPT = """
             你是文档目录结构分析专家。你有两个工具：
@@ -75,8 +80,9 @@ public class DocStructureAgent {
      * @param readmeHash    README.md 内容的 SHA-256 hash
      * @return Agent 最终输出文本
      */
+    @Override
     public String execute(String readmeContent, String readmeHash) {
-        DashScopeChatModel chatModel = buildChatModel();
+        ChatModel chatModel = buildChatModel();
 
         List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>();
         messages.add(new SystemMessage(SYSTEM_PROMPT));
@@ -168,7 +174,14 @@ public class DocStructureAgent {
         return null;
     }
 
-    private DashScopeChatModel buildChatModel() {
+    private ChatModel buildChatModel() {
+        if ("zhipu".equals(llmConfig.getDefaultProvider())) {
+            return buildZhipuChatModel();
+        }
+        return buildDashScopeChatModel();
+    }
+
+    private DashScopeChatModel buildDashScopeChatModel() {
         LLMConfiguration.AlibabaConfig config = llmConfig.getAlibaba();
         DashScopeChatOptions options = DashScopeChatOptions.builder()
                 .withModel(config.getModel())
@@ -181,6 +194,24 @@ public class DocStructureAgent {
                 .build();
         return DashScopeChatModel.builder()
                 .dashScopeApi(api)
+                .defaultOptions(options)
+                .build();
+    }
+
+    private OpenAiChatModel buildZhipuChatModel() {
+        LLMConfiguration.ZhipuConfig config = llmConfig.getZhipu();
+        OpenAiApi api = OpenAiApi.builder()
+                .apiKey(config.getApiKey())
+                .baseUrl(config.getBaseUrl())
+                .completionsPath("/v4/chat/completions")
+                .build();
+        OpenAiChatOptions options = OpenAiChatOptions.builder()
+                .model(config.getModel())
+                .temperature(config.getTemperature())
+                .maxTokens(config.getMaxTokens())
+                .build();
+        return OpenAiChatModel.builder()
+                .openAiApi(api)
                 .defaultOptions(options)
                 .build();
     }

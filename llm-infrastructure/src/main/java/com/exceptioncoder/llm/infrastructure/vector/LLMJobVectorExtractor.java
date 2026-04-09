@@ -2,10 +2,10 @@ package com.exceptioncoder.llm.infrastructure.vector;
 
 import com.exceptioncoder.llm.domain.model.JobPosting;
 import com.exceptioncoder.llm.domain.service.JobVectorExtractor;
-import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.domain.model.LLMRequest;
 import com.exceptioncoder.llm.domain.model.LLMResponse;
 import com.exceptioncoder.llm.domain.model.Message;
+import com.exceptioncoder.llm.infrastructure.provider.LLMProviderRouter;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 @Component
 public class LLMJobVectorExtractor implements JobVectorExtractor {
     
-    private final LLMProvider llmProvider;
-    
+    private final LLMProviderRouter providerRouter;
+
     private static final String EXTRACTION_PROMPT_TEMPLATE = """
         请从以下岗位JD中提取关键信息，并按照指定格式输出：
         
@@ -40,8 +40,8 @@ public class LLMJobVectorExtractor implements JobVectorExtractor {
         3. 职责摘要控制在100字以内
         """;
     
-    public LLMJobVectorExtractor(LLMProvider llmProvider) {
-        this.llmProvider = llmProvider;
+    public LLMJobVectorExtractor(LLMProviderRouter providerRouter) {
+        this.providerRouter = providerRouter;
     }
     
     @Override
@@ -57,7 +57,7 @@ public class LLMJobVectorExtractor implements JobVectorExtractor {
         request.setTemperature(0.3);
         request.setMaxTokens(500);
         
-        LLMResponse response = llmProvider.chat(request);
+        LLMResponse response = providerRouter.getDefault().chat(request);
         return response.getContent();
     }
     

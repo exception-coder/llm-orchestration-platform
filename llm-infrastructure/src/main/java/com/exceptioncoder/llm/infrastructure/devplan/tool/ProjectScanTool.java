@@ -19,6 +19,12 @@ import java.util.stream.Stream;
  *
  * <p>只做提取，不做理解和判断。输出原始 JSON 供 Agent(LLM) 消费。
  *
+ * <p><b>归属智能体：</b>开发计划智能体（devplan）
+ * <br><b>归属 Agent：</b>代码感知分析专家（devplan-code-awareness）
+ * <br><b>调用阶段：</b>第一阶段 — 代码感知，最先调用
+ * <br><b>业务场景：</b>在生成开发计划前，需要先了解项目整体结构。本工具扫描项目根目录，
+ * 提取模块列表、包树、Java 文件统计等原始数据，作为后续依赖分析、代码结构分析的输入基础。
+ *
  * @author zhangkai
  * @since 2026-04-07
  */

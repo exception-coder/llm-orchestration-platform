@@ -17,6 +17,13 @@ import java.util.*;
  * <p>REQUIREMENT_ANALYZER 和 SOLUTION_ARCHITECT 共用。
  * 降级策略：VectorStore 不可用时返回空结果 + WARN 日志。
  *
+ * <p><b>归属智能体：</b>开发计划智能体（devplan）
+ * <br><b>归属 Agent：</b>需求分析专家（devplan-requirement-analyzer）、方案架构师（devplan-solution-architect）
+ * <br><b>调用阶段：</b>第二阶段 — 需求分析 / 第三阶段 — 方案设计
+ * <br><b>业务场景：</b>需求分析专家通过语义搜索定位与需求相关的现有类（Controller、Service、
+ * Repository 等），确定影响范围和上下游依赖链。方案架构师在设计阶段搜索可复用的现有组件，
+ * 避免重复开发。依赖 code_index 预先建立的向量索引。
+ *
  * @author zhangkai
  * @since 2026-04-07
  */

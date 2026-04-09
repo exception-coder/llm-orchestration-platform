@@ -21,12 +21,12 @@ public class LLMConfiguration {
     /**
      * 默认提供商
      */
-    private String defaultProvider = "alibaba";
+    private String defaultProvider = "zhipu";
 
     /**
      * 默认模型
      */
-    private String defaultModel = "qwen-plus";
+    private String defaultModel = "glm-5.1";
 
     /**
      * 阿里云百炼配置（通义千问 / DeepSeek 等）
@@ -37,6 +37,11 @@ public class LLMConfiguration {
      * Ollama 本地模型配置
      */
     private OllamaConfig ollama = new OllamaConfig();
+
+    /**
+     * 智谱 AI 配置（兼容 OpenAI 协议，用于 Embedding）
+     */
+    private ZhipuConfig zhipu = new ZhipuConfig();
 
     /**
      * 通用配置
@@ -57,6 +62,16 @@ public class LLMConfiguration {
         private String baseUrl = "http://localhost:11434";
         private String model = "llama3.2";
         private Double temperature = 0.7;
+    }
+
+    @Data
+    public static class ZhipuConfig {
+        private String apiKey;
+        private String baseUrl = "https://open.bigmodel.cn/api/paas";
+        private String embeddingModel = "embedding-3";
+        private String model = "glm-4-flash";
+        private Double temperature = 0.7;
+        private Integer maxTokens = 4000;
     }
 
     @Data

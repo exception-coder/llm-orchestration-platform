@@ -1,0 +1,9 @@
+import { clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+/**
+ * 优雅地合并 Tailwind 类名，自动解决冲突。
+ */
+export function cn(...inputs) {
+  return twMerge(clsx(inputs))
+}

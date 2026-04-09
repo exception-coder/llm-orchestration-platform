@@ -3,6 +3,8 @@ package com.exceptioncoder.llm.infrastructure.devplan.config;
 import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.domain.model.AgentDefinition;
 import com.exceptioncoder.llm.domain.repository.AgentDefinitionRepository;
+import com.exceptioncoder.llm.infrastructure.agent.annotation.AgentGroup;
+import com.exceptioncoder.llm.infrastructure.agent.annotation.AgentGroupProvider;
 import com.exceptioncoder.llm.infrastructure.devplan.agent.DevPlanAgentConfig;
 import com.exceptioncoder.llm.infrastructure.devplan.tool.DevPlanToolRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +31,12 @@ import java.util.Map;
 @Slf4j
 @Component
 @Order(100) // 确保在 ToolScanner（默认 order）之后执行
-public class DevPlanAgentInitializer implements ApplicationListener<ApplicationReadyEvent> {
+@AgentGroup(
+        id = "devplan",
+        name = "开发计划智能体",
+        description = "基于代码感知、需求分析、方案设计、质量评审的四阶段智能体编排"
+)
+public class DevPlanAgentInitializer implements ApplicationListener<ApplicationReadyEvent>, AgentGroupProvider {
 
     private final AgentDefinitionRepository agentRepository;
     private final DevPlanAgentConfig agentConfig;
@@ -87,5 +95,12 @@ public class DevPlanAgentInitializer implements ApplicationListener<ApplicationR
         }
 
         log.info("DevPlan Agent 初始化汇总: 创建={}, 跳过={}", created, skipped);
+    }
+
+    @Override
+    public List<String> getAgentIds() {
+        return Arrays.stream(AgentRole.values())
+                .map(agentConfig::getAgentId)
+                .toList();
     }
 }

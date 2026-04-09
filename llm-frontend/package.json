@@ -9,17 +9,26 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.6.5",
+    "clsx": "^2.1.1",
     "element-plus": "^2.5.4",
     "highlight.js": "^11.9.0",
     "html2canvas": "^1.4.1",
     "marked": "^11.1.1",
     "pinia": "^2.1.7",
+    "tailwind-merge": "^3.5.0",
     "vue": "^3.4.15",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.3",
+    "@vueuse/motion": "^3.0.3",
+    "autoprefixer": "^10.4.27",
+    "lucide-vue-next": "^1.0.0",
+    "postcss": "^8.5.9",
+    "radix-vue": "^1.9.17",
+    "tailwindcss": "^4.2.2",
     "vite": "^5.0.11"
   }
 }

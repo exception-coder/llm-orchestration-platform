@@ -7,9 +7,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * 文档目录结构 Agent 工具
- * getLastDocStructure — 查询上一次解析的目录结构
- * saveDocStructure    — 保存新的目录结构版本
+ * 文档目录结构 Agent 工具 -- 管理知识库文档的目录结构版本。
+ *
+ * <p>getLastDocStructure — 查询上一次解析的目录结构
+ * <br>saveDocStructure — 保存新的目录结构版本
+ *
+ * <p><b>归属智能体：</b>通用（未绑定特定智能体）
+ * <br><b>归属 Agent：</b>知识库解析流程
+ * <br><b>调用阶段：</b>文档索引/重新解析时调用
+ * <br><b>业务场景：</b>知识库文档重新解析时，先通过 getLastDocStructure 获取上次的目录结构
+ * 和版本号，保持节点 path 一致性（避免已有引用失效）；解析完成后通过 saveDocStructure
+ * 保存新版本，旧版本自动归档。
  */
 @Slf4j
 @Component

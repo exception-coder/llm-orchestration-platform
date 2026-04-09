@@ -1,7 +1,7 @@
 package com.exceptioncoder.llm.application.usecase;
 
 import com.exceptioncoder.llm.domain.repository.DocStructureVersionRepository;
-import com.exceptioncoder.llm.infrastructure.agent.DocStructureAgent;
+import com.exceptioncoder.llm.domain.service.DocStructureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -22,16 +22,16 @@ public class DocRefreshUseCase {
     private static final String README_PATH = "classpath:docs/README.md";
 
     private final DocStructureVersionRepository versionRepository;
-    private final DocStructureAgent docStructureAgent;
+    private final DocStructureService docStructureService;
     private final ResourceLoader resourceLoader;
 
     public DocRefreshUseCase(
             DocStructureVersionRepository versionRepository,
-            DocStructureAgent docStructureAgent,
+            DocStructureService docStructureService,
             ResourceLoader resourceLoader
     ) {
         this.versionRepository = versionRepository;
-        this.docStructureAgent = docStructureAgent;
+        this.docStructureService = docStructureService;
         this.resourceLoader = resourceLoader;
     }
 
@@ -56,7 +56,7 @@ public class DocRefreshUseCase {
         }
 
         log.info("启动 DocStructureAgent，readmeHash={}", readmeHash);
-        String result = docStructureAgent.execute(readmeContent, readmeHash);
+        String result = docStructureService.execute(readmeContent, readmeHash);
         log.info("DocStructureAgent 完成: {}", result);
         return result;
     }

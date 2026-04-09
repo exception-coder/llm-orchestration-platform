@@ -85,12 +85,12 @@ public class OllamaProvider implements LLMProvider {
         if (chatModel == null) {
             LLMConfiguration.OllamaConfig config = configuration.getOllama();
             OllamaOptions options = OllamaOptions.builder()
-                    .withModel(request.getModel() != null ? request.getModel() : config.getModel())
-                    .withTemperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
+                    .model(request.getModel() != null ? request.getModel() : config.getModel())
+                    .temperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
                     .build();
             chatModel = OllamaChatModel.builder()
-                    .withOllamaApi(new OllamaApi(config.getBaseUrl()))
-                    .withDefaultOptions(options)
+                    .ollamaApi(OllamaApi.builder().baseUrl(config.getBaseUrl()).build())
+                    .defaultOptions(options)
                     .build();
         }
         return chatModel;
@@ -103,11 +103,11 @@ public class OllamaProvider implements LLMProvider {
 
         LLMConfiguration.OllamaConfig config = configuration.getOllama();
         OllamaOptions options = OllamaOptions.builder()
-                .withModel(request.getModel() != null ? request.getModel() : config.getModel())
-                .withTemperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
+                .model(request.getModel() != null ? request.getModel() : config.getModel())
+                .temperature(request.getTemperature() != null ? request.getTemperature() : config.getTemperature())
                 .build();
 
-        return new Prompt(messages, (org.springframework.ai.chat.prompt.ChatOptions) options);
+        return new Prompt(messages, options);
     }
 
     private org.springframework.ai.chat.messages.Message convertMessage(Message message) {

@@ -2,6 +2,7 @@ package com.exceptioncoder.llm.infrastructure.provider;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
+import com.exceptioncoder.llm.domain.exception.RateLimitExceededException;
 import com.exceptioncoder.llm.domain.model.LLMRequest;
 import com.exceptioncoder.llm.domain.model.LLMResponse;
 import com.exceptioncoder.llm.domain.model.Message;
@@ -9,18 +10,22 @@ import com.exceptioncoder.llm.domain.model.TokenUsage;
 import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -34,6 +39,7 @@ public class QwenProvider implements LLMProvider {
     private final LLMConfiguration configuration;
     private final ObjectMapper objectMapper;
     private DashScopeChatModel chatModel;
+    private RateLimiter rateLimiter;
 
     public QwenProvider(LLMConfiguration configuration) {
         this.configuration = configuration;
@@ -42,11 +48,18 @@ public class QwenProvider implements LLMProvider {
 
     @Override
     public LLMResponse chat(LLMRequest request) {
+        acquirePermit();
         try {
-            DashScopeChatModel model = getChatModel();
+            DashScopeChatModel model = getOrCreateChatModel();
             Prompt prompt = buildPrompt(request);
             ChatResponse response = model.call(prompt);
             return convertResponse(response, request.getModel());
+        } catch (NonTransientAiException e) {
+            if (e.getMessage() != null && e.getMessage().contains("429")) {
+                throw new RateLimitExceededException(getProviderName());
+            }
+            log.error("Qwen 调用失败", e);
+            throw new RuntimeException("Qwen 调用失败: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Qwen 调用失败", e);
             throw new RuntimeException("Qwen 调用失败: " + e.getMessage(), e);
@@ -55,8 +68,9 @@ public class QwenProvider implements LLMProvider {
 
     @Override
     public Flux<String> chatStream(LLMRequest request) {
+        acquirePermit();
         try {
-            DashScopeChatModel model = getChatModel();
+            DashScopeChatModel model = getOrCreateChatModel();
             Prompt prompt = buildPrompt(request);
             return model.stream(prompt)
                     .map(response -> response.getResults().get(0).getOutput().getText());
@@ -64,6 +78,11 @@ public class QwenProvider implements LLMProvider {
             log.error("Qwen 流式调用失败", e);
             return Flux.error(new RuntimeException("Qwen 流式调用失败: " + e.getMessage(), e));
         }
+    }
+
+    @Override
+    public ChatModel getChatModel() {
+        return getOrCreateChatModel();
     }
 
     @Override
@@ -87,7 +106,7 @@ public class QwenProvider implements LLMProvider {
                model.equals("qwen-long");
     }
 
-    private synchronized DashScopeChatModel getChatModel() {
+    private synchronized DashScopeChatModel getOrCreateChatModel() {
         if (chatModel == null) {
             LLMConfiguration.AlibabaConfig config = configuration.getAlibaba();
             DashScopeChatOptions options = DashScopeChatOptions.builder()
@@ -104,8 +123,23 @@ public class QwenProvider implements LLMProvider {
                     .dashScopeApi(api)
                     .defaultOptions(options)
                     .build();
+            initRateLimiter();
         }
         return chatModel;
+    }
+
+    private void initRateLimiter() {
+        int rpm = configuration.getAlibaba().getRateLimit().getRpm();
+        if (rpm > 0) {
+            rateLimiter = RateLimiter.create(rpm / 60.0);
+            log.info("Qwen 限速已启用: {} RPM", rpm);
+        }
+    }
+
+    private void acquirePermit() {
+        if (rateLimiter != null && !rateLimiter.tryAcquire(5, TimeUnit.SECONDS)) {
+            throw new RateLimitExceededException(getProviderName());
+        }
     }
 
     private Prompt buildPrompt(LLMRequest request) {

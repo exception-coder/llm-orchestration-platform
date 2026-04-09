@@ -57,10 +57,14 @@ llm:
     model: ${DASHSCOPE_MODEL:qwen-plus}
     temperature: ${DASHSCOPE_TEMPERATURE:0.7}
     max-tokens: ${DASHSCOPE_MAX_TOKENS:4000}
+    rate-limit:
+      rpm: 50
   ollama:
     base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
     model: ${OLLAMA_MODEL:llama3.2}
     temperature: ${OLLAMA_TEMPERATURE:0.7}
+    rate-limit:
+      rpm: 0
   # 智谱 AI（兼容 OpenAI 协议，用于 Chat + Embedding）
   zhipu:
     api-key: ${ZHIPU_API_KEY:sk-dev-test-key-placeholder}
@@ -69,6 +73,12 @@ llm:
     model: ${ZHIPU_MODEL:glm-4-flash}
     temperature: ${ZHIPU_TEMPERATURE:0.7}
     max-tokens: ${ZHIPU_MAX_TOKENS:4000}
+    rate-limit:
+      rpm: 50
   common:
     timeout: 60000
     max-retries: 3
+  # 降级顺序：主 Provider 限流时按此顺序尝试备选
+  fallback-order:
+    - zhipu
+    - alibaba

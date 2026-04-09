@@ -52,10 +52,14 @@ llm:
     model: ${DASHSCOPE_MODEL:qwen-plus}
     temperature: ${DASHSCOPE_TEMPERATURE:0.3}
     max-tokens: ${DASHSCOPE_MAX_TOKENS:4000}
+    rate-limit:
+      rpm: 50
   ollama:
     base-url: ${OLLAMA_BASE_URL}
     model: ${OLLAMA_MODEL:llama3.2}
     temperature: ${OLLAMA_TEMPERATURE:0.3}
+    rate-limit:
+      rpm: 0
   zhipu:
     api-key: ${ZHIPU_API_KEY}
     base-url: ${ZHIPU_BASE_URL:https://open.bigmodel.cn/api/paas}
@@ -63,6 +67,11 @@ llm:
     model: ${ZHIPU_MODEL:glm-4-flash}
     temperature: ${ZHIPU_TEMPERATURE:0.3}
     max-tokens: ${ZHIPU_MAX_TOKENS:4000}
+    rate-limit:
+      rpm: 50
   common:
     timeout: 30000
     max-retries: 2
+  fallback-order:
+    - zhipu
+    - alibaba

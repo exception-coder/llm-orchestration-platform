@@ -10,6 +10,7 @@ import com.exceptioncoder.llm.infrastructure.agent.graph.GraphExecutionEngine;
 import com.exceptioncoder.llm.infrastructure.agent.graph.GraphExecutorImpl;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolExecutor;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolRegistryImpl;
+import com.exceptioncoder.llm.infrastructure.provider.LLMProviderRouter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,9 +25,9 @@ public class AgentConfiguration {
             AgentDefinitionRepository agentRepository,
             ToolRegistryImpl toolRegistry,
             ToolExecutor toolExecutor,
-            LLMConfiguration llmConfig
+            LLMProviderRouter providerRouter
     ) {
-        return new AlibabaAgentExecutor(agentRepository, toolRegistry, toolExecutor, llmConfig);
+        return new AlibabaAgentExecutor(agentRepository, toolRegistry, toolExecutor, providerRouter);
     }
 
     @Bean

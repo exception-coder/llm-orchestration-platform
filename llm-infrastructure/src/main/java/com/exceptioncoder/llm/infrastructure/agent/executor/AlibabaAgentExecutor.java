@@ -1,23 +1,18 @@
 package com.exceptioncoder.llm.infrastructure.agent.executor;
 
-import com.alibaba.cloud.ai.dashscope.api.DashScopeApi;
-import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
-import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.exceptioncoder.llm.domain.model.*;
 import com.exceptioncoder.llm.domain.executor.AgentExecutor;
 import com.exceptioncoder.llm.domain.repository.AgentDefinitionRepository;
+import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolExecutor;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolRegistryImpl;
-import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
+import com.exceptioncoder.llm.infrastructure.provider.LLMProviderRouter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.*;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
 import reactor.core.publisher.Flux;
 
 import java.util.*;
@@ -38,19 +33,19 @@ public class AlibabaAgentExecutor implements AgentExecutor {
     private final AgentDefinitionRepository agentRepository;
     private final ToolRegistryImpl toolRegistry;
     private final ToolExecutor toolExecutor;
-    private final LLMConfiguration llmConfig;
+    private final LLMProviderRouter providerRouter;
     private final ObjectMapper objectMapper;
 
     public AlibabaAgentExecutor(
             AgentDefinitionRepository agentRepository,
             ToolRegistryImpl toolRegistry,
             ToolExecutor toolExecutor,
-            LLMConfiguration llmConfig
+            LLMProviderRouter providerRouter
     ) {
         this.agentRepository = agentRepository;
         this.toolRegistry = toolRegistry;
         this.toolExecutor = toolExecutor;
-        this.llmConfig = llmConfig;
+        this.providerRouter = providerRouter;
         this.objectMapper = new ObjectMapper();
     }
 
@@ -73,7 +68,9 @@ public class AlibabaAgentExecutor implements AgentExecutor {
         List<ToolCall> toolCalls = new ArrayList<>();
         List<String> thoughtHistory = new ArrayList<>();
 
-        ChatModel chatModel = buildChatModel(agent);
+        String model = agent.llmModel();
+        LLMProvider provider = model != null ? providerRouter.route(model) : providerRouter.getDefault();
+        ChatModel chatModel = provider.getChatModel();
         List<org.springframework.ai.chat.messages.Message> messages = buildInitialMessages(agent, request);
 
         int maxIterations = agent.maxIterations();
@@ -154,51 +151,6 @@ public class AlibabaAgentExecutor implements AgentExecutor {
     @Override
     public boolean supports(String agentId) {
         return agentRepository.existsById(agentId);
-    }
-
-    private ChatModel buildChatModel(AgentDefinition agent) {
-        String provider = llmConfig.getDefaultProvider();
-        if ("zhipu".equals(provider)) {
-            return buildZhipuChatModel(agent);
-        }
-        return buildDashScopeChatModel(agent);
-    }
-
-    private DashScopeChatModel buildDashScopeChatModel(AgentDefinition agent) {
-        LLMConfiguration.AlibabaConfig config = llmConfig.getAlibaba();
-        String model = agent.llmModel() != null ? agent.llmModel() : config.getModel();
-        DashScopeChatOptions options = DashScopeChatOptions.builder()
-                .withModel(model)
-                .withTemperature(config.getTemperature())
-                .withMaxToken(config.getMaxTokens())
-                .build();
-        DashScopeApi api = new DashScopeApi.Builder()
-                .apiKey(config.getApiKey())
-                .baseUrl(config.getBaseUrl())
-                .build();
-        return DashScopeChatModel.builder()
-                .dashScopeApi(api)
-                .defaultOptions(options)
-                .build();
-    }
-
-    private OpenAiChatModel buildZhipuChatModel(AgentDefinition agent) {
-        LLMConfiguration.ZhipuConfig config = llmConfig.getZhipu();
-        String model = agent.llmModel() != null ? agent.llmModel() : config.getModel();
-        OpenAiApi api = OpenAiApi.builder()
-                .apiKey(config.getApiKey())
-                .baseUrl(config.getBaseUrl())
-                .completionsPath("/v4/chat/completions")
-                .build();
-        OpenAiChatOptions options = OpenAiChatOptions.builder()
-                .model(model)
-                .temperature(config.getTemperature())
-                .maxTokens(config.getMaxTokens())
-                .build();
-        return OpenAiChatModel.builder()
-                .openAiApi(api)
-                .defaultOptions(options)
-                .build();
     }
 
     private List<org.springframework.ai.chat.messages.Message> buildInitialMessages(

@@ -1,24 +1,29 @@
 package com.exceptioncoder.llm.infrastructure.provider;
 
+import com.exceptioncoder.llm.domain.exception.RateLimitExceededException;
 import com.exceptioncoder.llm.domain.model.LLMRequest;
 import com.exceptioncoder.llm.domain.model.LLMResponse;
 import com.exceptioncoder.llm.domain.model.Message;
 import com.exceptioncoder.llm.domain.model.TokenUsage;
 import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.infrastructure.config.LLMConfiguration;
+import com.google.common.util.concurrent.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -31,6 +36,7 @@ public class ZhipuProvider implements LLMProvider {
 
     private final LLMConfiguration configuration;
     private OpenAiChatModel chatModel;
+    private RateLimiter rateLimiter;
 
     public ZhipuProvider(LLMConfiguration configuration) {
         this.configuration = configuration;
@@ -38,11 +44,18 @@ public class ZhipuProvider implements LLMProvider {
 
     @Override
     public LLMResponse chat(LLMRequest request) {
+        acquirePermit();
         try {
-            OpenAiChatModel model = getChatModel();
+            OpenAiChatModel model = getOrCreateChatModel();
             Prompt prompt = buildPrompt(request);
             ChatResponse response = model.call(prompt);
             return convertResponse(response, request.getModel());
+        } catch (NonTransientAiException e) {
+            if (e.getMessage() != null && e.getMessage().contains("429")) {
+                throw new RateLimitExceededException(getProviderName());
+            }
+            log.error("智谱 AI 调用失败", e);
+            throw new RuntimeException("智谱 AI 调用失败: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("智谱 AI 调用失败", e);
             throw new RuntimeException("智谱 AI 调用失败: " + e.getMessage(), e);
@@ -51,8 +64,9 @@ public class ZhipuProvider implements LLMProvider {
 
     @Override
     public Flux<String> chatStream(LLMRequest request) {
+        acquirePermit();
         try {
-            OpenAiChatModel model = getChatModel();
+            OpenAiChatModel model = getOrCreateChatModel();
             Prompt prompt = buildPrompt(request);
             return model.stream(prompt)
                     .map(response -> response.getResults().get(0).getOutput().getText())
@@ -61,6 +75,11 @@ public class ZhipuProvider implements LLMProvider {
             log.error("智谱 AI 流式调用失败", e);
             return Flux.error(new RuntimeException("智谱 AI 流式调用失败: " + e.getMessage(), e));
         }
+    }
+
+    @Override
+    public ChatModel getChatModel() {
+        return getOrCreateChatModel();
     }
 
     @Override
@@ -77,7 +96,7 @@ public class ZhipuProvider implements LLMProvider {
                lower.equals("chatglm");
     }
 
-    private synchronized OpenAiChatModel getChatModel() {
+    private synchronized OpenAiChatModel getOrCreateChatModel() {
         if (chatModel == null) {
             LLMConfiguration.ZhipuConfig config = configuration.getZhipu();
             OpenAiApi api = OpenAiApi.builder()
@@ -94,8 +113,23 @@ public class ZhipuProvider implements LLMProvider {
                     .openAiApi(api)
                     .defaultOptions(options)
                     .build();
+            initRateLimiter();
         }
         return chatModel;
+    }
+
+    private void initRateLimiter() {
+        int rpm = configuration.getZhipu().getRateLimit().getRpm();
+        if (rpm > 0) {
+            rateLimiter = RateLimiter.create(rpm / 60.0);
+            log.info("智谱 AI 限速已启用: {} RPM", rpm);
+        }
+    }
+
+    private void acquirePermit() {
+        if (rateLimiter != null && !rateLimiter.tryAcquire(5, TimeUnit.SECONDS)) {
+            throw new RateLimitExceededException(getProviderName());
+        }
     }
 
     private Prompt buildPrompt(LLMRequest request) {

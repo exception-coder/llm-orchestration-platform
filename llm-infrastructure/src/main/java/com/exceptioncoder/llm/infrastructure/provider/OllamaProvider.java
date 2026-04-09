@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatModel;
@@ -39,7 +40,7 @@ public class OllamaProvider implements LLMProvider {
     @Override
     public LLMResponse chat(LLMRequest request) {
         try {
-            OllamaChatModel model = getChatModel(request);
+            OllamaChatModel model = getOrCreateChatModel(request);
             Prompt prompt = buildPrompt(request);
             ChatResponse response = model.call(prompt);
             return convertResponse(response, request.getModel());
@@ -52,7 +53,7 @@ public class OllamaProvider implements LLMProvider {
     @Override
     public Flux<String> chatStream(LLMRequest request) {
         try {
-            OllamaChatModel model = getChatModel(request);
+            OllamaChatModel model = getOrCreateChatModel(request);
             Prompt prompt = buildPrompt(request);
             return model.stream(prompt)
                     .map(response -> response.getResults().get(0).getOutput().getText());
@@ -65,6 +66,11 @@ public class OllamaProvider implements LLMProvider {
     @Override
     public String getProviderName() {
         return "ollama";
+    }
+
+    @Override
+    public ChatModel getChatModel() {
+        return getOrCreateChatModel();
     }
 
     @Override
@@ -81,7 +87,22 @@ public class OllamaProvider implements LLMProvider {
                lower.contains("nomic");
     }
 
-    private synchronized OllamaChatModel getChatModel(LLMRequest request) {
+    private synchronized OllamaChatModel getOrCreateChatModel() {
+        if (chatModel == null) {
+            LLMConfiguration.OllamaConfig config = configuration.getOllama();
+            OllamaOptions options = OllamaOptions.builder()
+                    .model(config.getModel())
+                    .temperature(config.getTemperature())
+                    .build();
+            chatModel = OllamaChatModel.builder()
+                    .ollamaApi(OllamaApi.builder().baseUrl(config.getBaseUrl()).build())
+                    .defaultOptions(options)
+                    .build();
+        }
+        return chatModel;
+    }
+
+    private synchronized OllamaChatModel getOrCreateChatModel(LLMRequest request) {
         if (chatModel == null) {
             LLMConfiguration.OllamaConfig config = configuration.getOllama();
             OllamaOptions options = OllamaOptions.builder()

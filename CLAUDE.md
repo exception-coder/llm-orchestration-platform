@@ -33,7 +33,7 @@ npm run build    # 生产构建
 
 ## 架构
 
-DDD-lite 多模块 Maven 项目，依赖方向严格单向：
+DDD-lite 多模块 Maven 项目（Spring Boot 3.4.5 + Spring AI 1.0.1 + Spring AI Alibaba 1.0.0.4，Java 17），依赖方向严格单向：
 
 ```
 llm-api → llm-application → llm-domain ← llm-infrastructure
@@ -43,19 +43,87 @@ llm-api → llm-application → llm-domain ← llm-infrastructure
 
 | 模块 | 职责 |
 |---|---|
-| `llm-domain` | 核心业务模型（`model/`）、仓储接口（`repository/`）、领域服务接口（`service/`） |
-| `llm-application` | UseCase 接口 + Service 实现，编排领域和仓储 |
-| `llm-api` | REST Controller、DTO、`GlobalExceptionHandler` |
-| `llm-infrastructure` | LLM Provider 实现、Qdrant 向量存储、数据库仓储实现 |
-| `llm-starter` | Spring Boot 启动类、`application.yml` 配置 |
-| `llm-frontend` | Vue 3 + Element Plus + Pinia 前端 |
+| `llm-domain` | 核心业务模型（`model/`）、仓储接口（`repository/`）、领域服务接口（`service/`）、领域异常（`exception/`） |
+| `llm-application` | UseCase 接口 + Service 实现，编排领域和仓储；DevPlan 流程节点（`devplan/node/`） |
+| `llm-api` | REST Controller（按业务域分包）、DTO、`GlobalExceptionHandler` |
+| `llm-infrastructure` | LLM Provider 实现、Agent 框架、Qdrant 向量存储、数据库仓储实现、DevPlan 工具链 |
+| `llm-starter` | Spring Boot 启动类、`application.yml` 配置、配置验证 |
+| `llm-frontend` | Vue 3 + Element Plus + Pinia + Vite 前端 |
 
 ### 关键接口
 
-- `LLMProvider`（domain）：所有 LLM 提供商实现此接口（OpenAI via Spring AI、Ollama via LangChain4j）
-- `LLMOrchestrationService`：根据请求中的 `provider` 字段路由到对应 `LLMProvider`
+- `LLMProvider`（domain）：所有 LLM 提供商实现此接口，暴露 `chat()`、`stream()`、`getChatModel()` 方法
+- `LLMProviderRouter`（infrastructure）：动态路由 + `chatWithFallback()` 限速降级逻辑
+- `LLMOrchestrationService`（application）：根据请求中的 `provider` 字段路由到对应 `LLMProvider`
 - `VectorStoreRepository`（domain）：Qdrant 向量操作抽象
-- `PromptTemplate`（domain）：Prompt 模板领域接口
+- `PromptTemplate` / `PromptTemplateFactory`（domain）：Prompt 模板领域接口
+- `DocStructureService`（domain）：文档结构分析接口
+- `AgentExecutor` / `GraphExecutor`（domain）：Agent 执行与 Graph 编排接口
+
+### LLM Provider 体系
+
+| Provider | 实现类 | 协议 | 用途 |
+|---|---|---|---|
+| 智谱 AI（GLM） | `ZhipuProvider` | OpenAI 兼容 | Chat + Embedding，默认主 Provider |
+| 阿里百炼（Qwen/DeepSeek） | `QwenProvider` | DashScope | Chat，降级备选 |
+| Ollama | `OllamaProvider` | Ollama 原生 | 本地模型 |
+
+- 限速机制：Guava RateLimiter 令牌桶（按 `rate-limit.rpm` 配置），429 时抛 `RateLimitExceededException`
+- 降级顺序：`llm.fallback-order` 配置（默认 zhipu → alibaba）
+
+### Controller 分包结构
+
+| 包 | Controller | 路径前缀 |
+|---|---|---|
+| `management` | ChatController | `/api/v1/chat` |
+| `management` | AgentController | `/api/v1/agents` |
+| `management` | ToolController | `/api/v1/tools` |
+| `management` | GraphController | `/api/v1/graphs` |
+| `management` | PromptTemplateController | `/api/v1/prompt-templates` |
+| `management` | LLMModelConfigController | `/api/v1/model-config` |
+| `management` | PromptTestController | `/api/v1/prompt-test` |
+| `management` | DocViewerController | `/api/v1/docs` |
+| `note` | NoteController | `/api/v1/notes` |
+| `note` | NoteCategoryController | `/api/v1/notes/categories` |
+| `secretary` | SecretaryController | `/api/v1/secretary` |
+| `content` | ContentOptimizationController | `/api/v1/content` |
+| `jobsearch` | JobSearchController | `/api/job-search` |
+| `devplan` | DevPlanController | `/api/v1/dev-plan` |
+
+### UseCase 索引
+
+| UseCase | 职责 |
+|---|---|
+| `ChatUseCase` | 对话（普通 + SSE 流式） |
+| `AgentExecutionUseCase` | Agent 执行与 Trace 查询 |
+| `GraphOrchestrationUseCase` | Graph 编排执行 |
+| `DevPlanUseCase` | 开发计划生成（四阶段流程） |
+| `PromptTemplateManagementUseCase` | Prompt 模板 CRUD |
+| `PromptTestUseCase` | Prompt 测试 |
+| `LLMModelConfigUseCase` | LLM 模型配置管理 |
+| `NoteUseCase` | 笔记捕获（AI 自动分类） |
+| `NoteCategoryUseCase` | 笔记分类管理 |
+| `ContentOptimizationUseCase` | 内容优化 |
+| `JobSearchUseCase` | 职位向量搜索 |
+| `DocRefreshUseCase` | 文档刷新 |
+
+### Domain 仓储接口
+
+| Repository | 说明 |
+|---|---|
+| `AgentDefinitionRepository` | Agent 定义 |
+| `GraphDefinitionRepository` | Graph 定义 |
+| `ConversationMemoryRepository` | 对话历史 |
+| `ExecutionTraceRepository` | 执行追踪 |
+| `PromptTemplateRepository` | Prompt 模板 |
+| `LLMModelConfigRepository` | 模型配置 |
+| `NoteRepository` / `NoteCategoryRepository` | 笔记 |
+| `DocSearchRepository` / `DocStructureVersionRepository` | 文档检索 |
+| `VectorStoreRepository` | 向量存储 |
+| `SecretaryMemoryRepository` / `SecretaryScheduleRepository` / `SecretaryTodoRepository` | 秘书数据 |
+| `DevPlanRecordRepository` / `DevPlanTaskRepository` | DevPlan 记录 |
+| `CodeIndexStatusRepository` / `ProfileIndexStatusRepository` | 代码/画像索引状态 |
+| `ProjectArchTopologyRepository` | 项目架构拓扑 |
 
 ## 编码规范（关键约束）
 
@@ -105,10 +173,20 @@ llm-api → llm-application → llm-domain ← llm-infrastructure
 
 主配置文件：`llm-starter/src/main/resources/application.yml`
 
+分环境配置：`llm-starter/src/main/resources/config/{dev,prod}/`
+- `datasource.yml` — 数据源
+- `spring-ai.yml` — Spring AI、Qdrant、LLM 限速/降级
+- `logging.yml` — 日志级别
+
 关键配置项：
-- `llm.openai.api-key`
+- `llm.default-provider` / `llm.default-model` — 默认提供商和模型
+- `llm.zhipu.api-key` — 智谱 API Key（`ZHIPU_API_KEY` 环境变量）
+- `llm.alibaba.api-key` — 阿里百炼 API Key（`DASHSCOPE_API_KEY` 环境变量）
 - `llm.ollama.base-url`（默认 `http://localhost:11434`）
-- Qdrant：`docker/qdrant/docker-compose.yml` 启动本地实例
+- `llm.fallback-order` — 限速降级顺序
+- `llm.{provider}.rate-limit.rpm` — 各 Provider 每分钟请求上限
+- Qdrant：`spring.ai.vectorstore.qdrant.*`（`docker/qdrant/docker-compose.yml` 启动本地实例）
+- 向量 Collection：`job_postings_dev`（职位）、`docs_vectors`（文档）、`project_profile`（项目画像）
 
 ## 智能体 / Agent / Tool 注册规范
 

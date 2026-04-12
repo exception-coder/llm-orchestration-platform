@@ -1,0 +1,10 @@
+{
+  "name": "claude-code-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bridge between Java ProcessBuilder and Claude Code SDK",
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^1"
+  }
+}

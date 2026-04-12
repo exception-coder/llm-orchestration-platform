@@ -43,7 +43,7 @@
         -->
         <spring-ai.version>1.0.1</spring-ai.version>
         <spring-ai-alibaba.version>1.0.0.4</spring-ai-alibaba.version>
-        <lombok.version>1.18.30</lombok.version>
+        <lombok.version>1.18.44</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <spring-cloud-bootstrap.version>4.2.0</spring-cloud-bootstrap.version>
     </properties>

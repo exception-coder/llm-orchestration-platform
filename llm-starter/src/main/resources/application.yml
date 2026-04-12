@@ -16,6 +16,7 @@ spring:
       - optional:classpath:config/${spring.profiles.active}/datasource.yml
       - optional:classpath:config/${spring.profiles.active}/spring-ai.yml
       - optional:classpath:config/${spring.profiles.active}/logging.yml
+      - optional:classpath:config/${spring.profiles.active}/graph.yml
 
 # Actuator 配置
 management:
@@ -40,6 +41,7 @@ llm:
         - datasource.yml
         - spring-ai.yml
         - logging.yml
+        - graph.yml
       # 需要验证的关键配置属性（用于确认配置已加载）
       required-properties:
         - spring.datasource.url

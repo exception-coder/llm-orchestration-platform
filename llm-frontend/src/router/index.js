@@ -66,6 +66,12 @@ const routes = [
     component: () => import('../views/GraphOrchestration.vue')
   },
   {
+    path: '/graph/:id/visual',
+    name: 'GraphVisualization',
+    component: () => import('../views/GraphVisualization.vue'),
+    meta: { title: 'Graph 可视化' }
+  },
+  {
     path: '/tool-management',
     name: 'ToolManagement',
     component: () => import('../views/ToolManagement.vue')

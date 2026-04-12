@@ -1,0 +1,58 @@
+# ============================================================
+# Graph 配置（多 Agent 协作图，每个 Graph 编排多个 Agent 节点）
+# ============================================================
+
+# ----------------------------------------------------------
+# devplan Graph — 开发方案生成（ScanNode → AnalyzeNode → DesignNode ⇄ ReviewNode）
+# ----------------------------------------------------------
+devplan:
+  profile:
+    # 是否强制要求通过大模型 CLI 编程工具生成画像
+    # true: 内部 Fallback 不参与生成链，LLM 工具全部失败直接报错
+    # false: LLM 工具失败后回退到内部 Tool 模板拼装
+    require-llm-generator: ${DEVPLAN_REQUIRE_LLM_GENERATOR:true}
+
+    generators:
+      claude-code:
+        enabled: ${DEVPLAN_CLAUDE_CODE_ENABLED:true}
+        # 调用模式：sdk（推荐，完整 Skills 支持）或 cli（备选，轻量但 Skills 不可用）
+        mode: ${DEVPLAN_CLAUDE_CODE_MODE:sdk}
+        cli-path: ${DEVPLAN_CLAUDE_CODE_CLI_PATH:claude}
+        node-path: ${DEVPLAN_CLAUDE_CODE_NODE_PATH:node}
+        sdk-bridge-path: ${DEVPLAN_CLAUDE_CODE_SDK_BRIDGE_PATH:scripts/claude-code-bridge.mjs}
+        # 空闲超时（秒）：连续无输出超过此值才终止，有输出就不打断
+        idle-timeout-seconds: ${DEVPLAN_CLAUDE_CODE_IDLE_TIMEOUT:120}
+        # 兜底总超时（秒）：防止无限运行，0 表示不限制
+        max-timeout-seconds: ${DEVPLAN_CLAUDE_CODE_MAX_TIMEOUT:1800}
+        skill-name: generate-project-profile
+      internal-fallback:
+        enabled: ${DEVPLAN_INTERNAL_FALLBACK_ENABLED:true}
+
+    cache:
+      # 过期判断策略: git-commit-time / file-age / always-fresh
+      freshness-check: ${DEVPLAN_CACHE_FRESHNESS_CHECK:git-commit-time}
+      # file-age 模式下画像文件最大缓存时长（小时）
+      max-age-hours: ${DEVPLAN_CACHE_MAX_AGE_HOURS:24}
+
+# ----------------------------------------------------------
+# secretary Graph — 秘书助手（已在 application.yml 中配置，此处预留）
+# ----------------------------------------------------------
+# secretary:
+#   tools:
+#     schedule: true
+#     todo: true
+
+# ----------------------------------------------------------
+# Agent 异步执行配置
+# ----------------------------------------------------------
+agent:
+  async:
+    max-concurrent: ${AGENT_ASYNC_MAX_CONCURRENT:5}
+    thread-pool-size: ${AGENT_ASYNC_THREAD_POOL_SIZE:5}
+    execution-timeout: ${AGENT_ASYNC_EXECUTION_TIMEOUT:120}
+    task-retain-minutes: ${AGENT_ASYNC_TASK_RETAIN_MINUTES:30}
+    sse-timeout: ${AGENT_ASYNC_SSE_TIMEOUT:600000}
+
+# ----------------------------------------------------------
+# 后续新增 Graph 在此追加配置节
+# ----------------------------------------------------------

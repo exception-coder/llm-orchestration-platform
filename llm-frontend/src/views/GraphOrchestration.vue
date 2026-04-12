@@ -40,6 +40,12 @@
           </div>
           <div class="flex items-center gap-3">
             <button
+              @click="viewVisual(graph)"
+              class="px-4 py-2 neo-convex rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
+            >
+              VISUAL
+            </button>
+            <button
               @click="viewCallChain(graph)"
               class="px-4 py-2 neo-convex rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
             >
@@ -143,9 +149,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { GitBranch, Workflow, Plus, Trash2 } from 'lucide-vue-next'
 import { graphAPI } from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+const router = useRouter()
 
 const graphs = ref([])
 const graphAgents = ref({})
@@ -213,6 +222,10 @@ const deleteGraph = async (id) => {
   } catch (err) {
     if (err !== 'cancel') ElMessage.error('删除失败')
   }
+}
+
+const viewVisual = (graph) => {
+  router.push({ name: 'GraphVisualization', params: { id: graph.id } })
 }
 
 const viewCallChain = async (graph) => {

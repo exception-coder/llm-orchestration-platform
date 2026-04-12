@@ -1,6 +1,7 @@
 package com.exceptioncoder.llm.domain.executor;
 
 import com.exceptioncoder.llm.domain.model.AgentExecutionResult;
+import com.exceptioncoder.llm.domain.executor.AgentIterationListener;
 import reactor.core.publisher.Flux;
 
 import java.util.Map;
@@ -15,6 +16,15 @@ public interface AgentExecutor {
      * 同步执行 Agent
      */
     AgentExecutionResult execute(AgentExecutionRequest request);
+
+    /**
+     * 同步执行 Agent，支持迭代级事件回调。
+     *
+     * <p>默认委托给无 listener 版本，实现类可覆盖以支持每轮迭代通知。</p>
+     */
+    default AgentExecutionResult execute(AgentExecutionRequest request, AgentIterationListener listener) {
+        return execute(request);
+    }
 
     /**
      * 流式执行 Agent

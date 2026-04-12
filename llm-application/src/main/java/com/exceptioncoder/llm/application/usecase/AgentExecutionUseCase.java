@@ -1,15 +1,19 @@
 package com.exceptioncoder.llm.application.usecase;
 
+import com.exceptioncoder.llm.domain.executor.AgentEventPublisher;
 import com.exceptioncoder.llm.domain.executor.AgentExecutor;
+import com.exceptioncoder.llm.domain.executor.AgentIterationEvent;
 import com.exceptioncoder.llm.domain.model.*;
 import com.exceptioncoder.llm.domain.registry.ToolRegistry;
 import com.exceptioncoder.llm.domain.repository.AgentDefinitionRepository;
 import com.exceptioncoder.llm.domain.repository.ExecutionTraceRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,19 +27,54 @@ public class AgentExecutionUseCase {
     private final AgentDefinitionRepository agentRepository;
     private final ToolRegistry toolRegistry;
     private final ExecutionTraceRepository traceRepository;
+    private final AgentTaskManager agentTaskManager;
+    private final AgentEventPublisher agentEventPublisher;
 
     public AgentExecutionUseCase(AgentExecutor agentExecutor,
                                  AgentDefinitionRepository agentRepository,
                                  ToolRegistry toolRegistry,
-                                 ExecutionTraceRepository traceRepository) {
+                                 ExecutionTraceRepository traceRepository,
+                                 AgentTaskManager agentTaskManager,
+                                 AgentEventPublisher agentEventPublisher) {
         this.agentExecutor = agentExecutor;
         this.agentRepository = agentRepository;
         this.toolRegistry = toolRegistry;
         this.traceRepository = traceRepository;
+        this.agentTaskManager = agentTaskManager;
+        this.agentEventPublisher = agentEventPublisher;
     }
 
     /**
-     * 执行 Agent
+     * 异步提交 Agent 执行任务。
+     *
+     * @return 初始任务对象，并发超限时返回 null
+     */
+    public AgentTask submitAsync(String agentId, String userInput, Map<String, Object> context) {
+        AgentDefinition agent = agentRepository.findById(agentId)
+                .orElseThrow(() -> new IllegalArgumentException("Agent 不存在: " + agentId));
+        log.info("异步提交 Agent: agentId={}, input={}", agentId, userInput);
+        return agentTaskManager.submit(agentId, userInput, context, agent.timeoutSeconds());
+    }
+
+    /**
+     * 查询 Agent 执行状态。
+     */
+    public Optional<AgentTask> getExecutionStatus(String executionId) {
+        return agentTaskManager.getTask(executionId);
+    }
+
+    /**
+     * 获取指定执行任务的事件流。
+     *
+     * <p>返回 {@code Flux<AgentIterationEvent>}，API 层消费后自行选择
+     * 推送协议（SSE / WebSocket）。不绑定任何传输技术。</p>
+     */
+    public Flux<AgentIterationEvent> streamExecution(String executionId) {
+        return agentEventPublisher.getEventStream(executionId);
+    }
+
+    /**
+     * 同步执行 Agent（保留，供内部编排调用）
      */
     public AgentExecutionResult execute(String agentId, String userInput, Map<String, Object> context) {
         var request = AgentExecutor.AgentExecutionRequest.builder()

@@ -2,6 +2,7 @@ package com.exceptioncoder.llm.infrastructure.agent.executor;
 
 import com.exceptioncoder.llm.domain.model.*;
 import com.exceptioncoder.llm.domain.executor.AgentExecutor;
+import com.exceptioncoder.llm.domain.executor.AgentIterationListener;
 import com.exceptioncoder.llm.domain.repository.AgentDefinitionRepository;
 import com.exceptioncoder.llm.domain.service.LLMProvider;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolExecutor;
@@ -51,6 +52,11 @@ public class AlibabaAgentExecutor implements AgentExecutor {
 
     @Override
     public AgentExecutionResult execute(AgentExecutionRequest request) {
+        return execute(request, AgentIterationListener.NOOP);
+    }
+
+    @Override
+    public AgentExecutionResult execute(AgentExecutionRequest request, AgentIterationListener listener) {
         long startMs = System.currentTimeMillis();
 
         var agentOpt = agentRepository.findById(request.agentId());
@@ -75,29 +81,42 @@ public class AlibabaAgentExecutor implements AgentExecutor {
 
         int maxIterations = agent.maxIterations();
         AtomicInteger iterations = new AtomicInteger(0);
+        int consecutiveFailures = 0;
         boolean finished = false;
         String finalOutput = null;
 
         while (iterations.incrementAndGet() <= maxIterations && !finished) {
+            int currentIteration = iterations.get();
+
             try {
-                Prompt prompt = new Prompt(messages);
-                ChatResponse response = chatModel.call(prompt);
+                // 单次 LLM 调用，含重试
+                String content = callWithRetry(chatModel, messages, currentIteration);
 
-                response.getResult();
-
-                String content = response.getResults().get(0).getOutput().getText();
+                // 重置连续失败计数
+                consecutiveFailures = 0;
 
                 // 尝试解析工具调用
-                ToolCallResult toolCallResult = null;
-                if (content != null) {
-                    toolCallResult = parseAndExecuteTool(content, agent, toolExecutor, toolCalls);
-                }
+                final ToolCallResult toolCallResult = content != null
+                        ? parseAndExecuteTool(content, agent, toolExecutor, toolCalls)
+                        : null;
 
                 if (toolCallResult != null) {
                     // 有工具调用，追加 Observation
-                    thoughtHistory.add("思考: " + extractThought(content));
+                    String thought = extractThought(content);
+                    thoughtHistory.add("思考: " + thought);
                     messages.add(new AssistantMessage(content));
                     messages.add(new UserMessage("观察结果: " + toolCallResult.observation));
+
+                    // 回调：迭代 + 工具结果
+                    ToolCall lastToolCall = toolCalls.isEmpty() ? null : toolCalls.get(toolCalls.size() - 1);
+                    String observation = toolCallResult.observation;
+                    notifyListener(listener, () -> listener.onIteration(
+                            request.executionId(), currentIteration, thought, lastToolCall));
+                    if (lastToolCall != null) {
+                        notifyListener(listener, () -> listener.onToolResult(
+                                request.executionId(), currentIteration,
+                                lastToolCall.toolName(), observation));
+                    }
                 } else {
                     // 无工具调用，LLM 直接回答
                     if (content != null) {
@@ -105,19 +124,47 @@ public class AlibabaAgentExecutor implements AgentExecutor {
                     }
                     finalOutput = content;
                     finished = true;
+
+                    // 回调：最终迭代
+                    notifyListener(listener, () -> listener.onIteration(
+                            request.executionId(), currentIteration, content, null));
                 }
+
+                log.info("Agent 迭代完成: executionId={}, iteration={}, hasToolCall={}, elapsed={}ms",
+                        request.executionId(), currentIteration, toolCallResult != null,
+                        System.currentTimeMillis() - startMs);
+
             } catch (Exception e) {
-                log.error("Agent 执行异常: iteration={}", iterations.get(), e);
-                if (iterations.get() >= maxIterations) {
+                consecutiveFailures++;
+                log.error("Agent 执行异常: executionId={}, iteration={}, consecutiveFailures={}",
+                        request.executionId(), currentIteration, consecutiveFailures, e);
+
+                // R5: 连续 3 轮失败触发熔断
+                if (consecutiveFailures >= 3) {
+                    log.error("连续 {} 轮迭代失败，触发熔断: executionId={}", consecutiveFailures, request.executionId());
                     return AgentExecutionResult.builder()
                             .executionId(request.executionId())
                             .agentId(request.agentId())
                             .finalOutput(finalOutput)
                             .toolCalls(toolCalls)
                             .thoughtHistory(thoughtHistory)
-                            .iterations(iterations.get())
+                            .iterations(currentIteration)
+                            .status(AgentExecutionResult.Status.FAILED)
+                            .errorMessage("连续 " + consecutiveFailures + " 轮迭代失败: " + e.getMessage())
+                            .elapsedMs(System.currentTimeMillis() - startMs)
+                            .build();
+                }
+
+                if (currentIteration >= maxIterations) {
+                    return AgentExecutionResult.builder()
+                            .executionId(request.executionId())
+                            .agentId(request.agentId())
+                            .finalOutput(finalOutput)
+                            .toolCalls(toolCalls)
+                            .thoughtHistory(thoughtHistory)
+                            .iterations(currentIteration)
                             .status(AgentExecutionResult.Status.MAX_ITERATIONS_REACHED)
-                            .errorMessage("达到最大迭代次数")
+                            .errorMessage("达到最大迭代次数，最后异常: " + e.getMessage())
                             .elapsedMs(System.currentTimeMillis() - startMs)
                             .build();
                 }
@@ -140,11 +187,120 @@ public class AlibabaAgentExecutor implements AgentExecutor {
                 .build();
     }
 
+    /**
+     * 单次 LLM 调用，含超时重试（最多重试 2 次）。
+     * <p>
+     * 使用流式（stream）模式替代同步 call：首个 token 快速返回，
+     * 连接在整个生成过程中保持活跃，从根本上避免 ReadTimeoutException。
+     * 内部将流式 token 收集为完整响应，对上层调用者透明。
+     */
+    private String callWithRetry(ChatModel chatModel,
+                                  List<org.springframework.ai.chat.messages.Message> messages,
+                                  int iteration) {
+        int maxRetries = 2;
+        Exception lastException = null;
+
+        for (int retry = 0; retry <= maxRetries; retry++) {
+            try {
+                Prompt prompt = new Prompt(messages);
+                // 流式调用：token 逐个返回，避免长时间无数据导致读超时
+                String content = chatModel.stream(prompt)
+                        .map(response -> {
+                            var results = response.getResults();
+                            if (results == null || results.isEmpty()) return "";
+                            String text = results.get(0).getOutput().getText();
+                            return text != null ? text : "";
+                        })
+                        .collectList()
+                        .map(chunks -> String.join("", chunks))
+                        .block();
+                return content;
+            } catch (Exception e) {
+                lastException = e;
+                if (retry < maxRetries) {
+                    log.warn("LLM 流式调用失败，重试 {}/{}: iteration={}", retry + 1, maxRetries, iteration, e);
+                }
+            }
+        }
+        throw new RuntimeException("LLM 调用失败（重试 " + maxRetries + " 次后）: " + lastException.getMessage(), lastException); // NOSONAR lastException is always non-null here
+    }
+
+    /**
+     * 安全地通知 listener，不让回调异常影响主流程。
+     */
+    private void notifyListener(AgentIterationListener listener, Runnable action) {
+        try {
+            action.run();
+        } catch (Exception e) {
+            log.debug("Listener 回调异常（不影响执行）", e);
+        }
+    }
+
+    /**
+     * 流式执行 Agent（ReAct 循环）。
+     * <p>
+     * 工具调用迭代：内部缓冲，向调用方发送进度事件。
+     * 最终回答迭代：逐 token 流式输出。
+     */
     @Override
     public Flux<String> executeStream(AgentExecutionRequest request) {
-        return Flux.defer(() -> {
-            AgentExecutionResult result = execute(request);
-            return Flux.just(result.finalOutput());
+        return Flux.create(sink -> {
+            try {
+                var agentOpt = agentRepository.findById(request.agentId());
+                if (agentOpt.isEmpty()) {
+                    sink.error(new IllegalArgumentException("Agent 不存在: " + request.agentId()));
+                    return;
+                }
+
+                AgentDefinition agent = agentOpt.get();
+                List<ToolCall> toolCalls = new ArrayList<>();
+                String model = agent.llmModel();
+                LLMProvider provider = model != null ? providerRouter.route(model) : providerRouter.getDefault();
+                ChatModel chatModel = provider.getChatModel();
+                List<org.springframework.ai.chat.messages.Message> messages = buildInitialMessages(agent, request);
+
+                int maxIterations = agent.maxIterations();
+                boolean finished = false;
+
+                for (int iteration = 1; iteration <= maxIterations && !finished; iteration++) {
+                    Prompt prompt = new Prompt(messages);
+                    StringBuilder contentBuilder = new StringBuilder();
+
+                    // 流式收集本轮响应
+                    chatModel.stream(prompt)
+                            .doOnNext(response -> {
+                                var results = response.getResults();
+                                if (results != null && !results.isEmpty()) {
+                                    String text = results.get(0).getOutput().getText();
+                                    if (text != null) {
+                                        contentBuilder.append(text);
+                                    }
+                                }
+                            })
+                            .blockLast();
+
+                    String content = contentBuilder.toString();
+                    ToolCallResult toolCallResult = content.isEmpty() ? null
+                            : parseAndExecuteTool(content, agent, toolExecutor, toolCalls);
+
+                    if (toolCallResult != null) {
+                        // 工具调用迭代：追加 Observation，继续循环
+                        messages.add(new AssistantMessage(content));
+                        messages.add(new UserMessage("观察结果: " + toolCallResult.observation));
+                    } else {
+                        // 最终回答：逐 token 发送给调用方
+                        sink.next(content);
+                        finished = true;
+                    }
+                }
+
+                if (!finished) {
+                    sink.next("Agent 执行未产生最终输出（达到最大迭代次数）");
+                }
+                sink.complete();
+            } catch (Exception e) {
+                sink.error(e);
+            }
         });
     }
 

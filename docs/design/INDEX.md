@@ -45,26 +45,36 @@
 - 大纲：背景与目标 / 四角色协作模型 / StateGraph 流程设计 / 接口设计 / 类设计（55 个新建类 + 8 个复用类）/ 数据库设计（4 表）/ 核心业务规则 / v4 全景图映射 / 架构成熟度对标 / Prompt 模板
 - 历史版本：`代码感知智能开发方案智能体-20260406-v1.md`（基于 v3 全景图，单 Agent 四阶段串行）
 
-### Tool 层与 Agent 初始化器实现（子模块）
-- 文件：`代码感知智能开发方案智能体/Tool层与Agent初始化器实现/Tool层与Agent初始化器实现-20260407-v2.md`（最新）
-- 摘要：8 个 @Tool 实现（4 元数据提取器 + 1 向量索引器 + 2 检索/读取器 + 1 模板器）+ DevPlanToolRegistry 角色路由 + DevPlanAgentInitializer 启动注册 + Trace 全链路追踪
-- 大纲：背景与 v1 问题 / Tool 职责分离原则 / 8 Tool 详细设计 / DevPlanToolRegistry / DevPlanAgentInitializer / Trace / 类清单 / 异常处理
-- 归属原因：v2 总体架构中 Tool/Trace/Initializer 的基础设施实现设计
-- 历史版本：`Tool层与Agent初始化器实现-20260407-v1.md`（Tool 混淆了提取与理解职责）
+### Tool 层实现设计（子模块）
+- 文件：`代码感知智能开发方案智能体/Tool层与Agent初始化器实现/Tool层实现设计-20260412-v1.md`（最新）
+- 摘要：8 个 @Tool 实现（4 元数据提取器 + 1 向量索引器 + 2 检索/读取器 + 1 模板器）+ DevPlanToolRegistry 角色路由 + Schema 校验
+- 大纲：背景与 v1 问题 / Tool 职责分离原则 / 8 Tool 详细设计 / DevPlanToolRegistry / 类清单 / 技术方案 / 异常处理
+- 归属原因：v2 总体架构中 Tool 标准协议层的实现设计
+
+### Agent 初始化器实现设计（子模块）
+- 文件：`代码感知智能开发方案智能体/Tool层与Agent初始化器实现/Agent初始化器实现设计-20260412-v1.md`（最新）
+- 摘要：DevPlanAgentInitializer 启动时将 4 个角色 Agent 写入 agent_definition 表，幂等设计，启动顺序依赖
+- 大纲：背景 / Agent 记录定义 / 启动顺序依赖 / 类清单 / 业务规则 / 异常处理
+- 归属原因：v2 总体架构中 Agent 启动注册的实现设计
+
+> **归档：** `Tool层与Agent初始化器实现-20260407-v2.md` 为拆分前的合并文档，不再维护。
+> 历史版本：`Tool层与Agent初始化器实现-20260407-v1.md`（Tool 混淆了提取与理解职责）
 
 ### 代码感知智能体实现（子模块）
 
-- 文件：`代码感知智能开发方案智能体/代码感知智能体实现/代码感知智能体实现-20260408-v1.md`
-- 摘要：CODE_AWARENESS Agent 完整设计 — 5 Tool ReAct 编排 + ProjectProfile 7 维度生成 + ArchTopology 输出，模型选择 qwen-max
-- 大纲：技术选型决策 / 角色定位 / ReAct 执行流程 / 工具集 / System Prompt / 记忆体系 / State 交互 / Agent 注册 / 类清单 / 业务规则 / 异常处理
+- 文件：`代码感知智能开发方案智能体/代码感知智能体实现/代码感知智能体实现-20260412-v3.md`（最新）
+- 摘要：ClaudeCodeProfileGenerator v3 改造 — SDK 桥接模式（主路径）+ CLI 备选、空闲超时替代固定总超时、结构化事件流日志、双模式配置切换
+- 大纲：v2 问题分析 / 双模式架构设计 / SDK 桥接脚本协议 / 空闲超时机制 / 配置扩展 / 类设计（1 重构 + 1 修改 + 2 新建脚本）/ 业务规则（R11-R15）/ 异常处理 / 测试要点
 - 归属原因：StateGraph 第一站 ScanNode 的 Agent 实现，输出供后续所有 Agent 消费
+- 历史版本：`代码感知智能体实现-20260411-v2.md`（SPI 生成器链 + CLI 主实现）、`代码感知智能体实现-20260408-v1.md`（5 Tool ReAct 编排）
 
 ### 需求分析智能体实现（子模块）
 
-- 文件：`代码感知智能开发方案智能体/需求分析智能体实现/需求分析智能体实现-20260408-v1.md`
-- 摘要：REQUIREMENT_ANALYZER Agent 完整设计 — CodeSearchTool + FileReadTool ReAct 编排 + ImpactAnalysis JSON 输出，模型选择 qwen-plus
-- 大纲：技术选型决策 / 角色定位 / ReAct 执行流程 / 工具集 / System Prompt / 记忆体系 / State 交互 / Agent 注册 / 类清单 / 业务规则 / 异常处理
+- 文件：`代码感知智能开发方案智能体/需求分析智能体实现/需求分析智能体实现-20260412-v2.md`（最新）
+- 摘要：适配画像 3 文件拆分，执行模式从"搜索猜测"改为"文档查询 + 搜索验证"，ImpactAnalysis 输出增强（constraintImpacts / crossServiceImpacts / eventImpacts），System Prompt 重构
+- 大纲：v1 问题分析 / v2 文档查询模式 / State 输入适配 / Prompt 重构 / ImpactAnalysis 扩展 / 降级兼容 / 异常处理 / 测试要点
 - 归属原因：StateGraph 第二站 AnalyzeNode 的 Agent 实现
+- 历史版本：`需求分析智能体实现-20260408-v1.md`（纯搜索猜测模式）
 
 ### 方案生成智能体实现（子模块）
 
@@ -80,9 +90,31 @@
 - 大纲：技术选型决策 / Tool vs Sensor 对比 / 角色定位 / Sensor Chain 设计 / System Prompt / State 交互 / Agent 注册 / 类清单
 - 归属原因：StateGraph 第四站 ReviewNode 的 Agent 实现
 
+### Agent 全链路 Trace 设计（子模块）
+
+- 文件：`通用智能体架构/Agent全链路Trace设计/Agent全链路Trace设计-20260412-v1.md`
+- 摘要：平台级 Agent 全链路追踪标准 — SpanContext 数据模型 + AgentTraceRecorder 组件（ThreadLocal Span 栈 + SLF4J 日志），一期内存实现，预留 OpenTelemetry 演进路径
+- 大纲：背景与目标 / 核心概念（Trace/Span/调用树）/ SpanContext record / AgentTraceRecorder 组件 / 使用模式 / 类清单 / 业务规则 / 演进规划
+- 归属原因：从 devplan Trace 设计中提取通用化，所有 Agent Group 共用的可观测性基础设施
+
 ### 平台管理接口补全（子模块）
 
 - 文件：`通用智能体架构/平台管理接口补全/平台管理接口补全-20260409-v1.md`
 - 摘要：补全 5 大管理对象的关联查询接口 — Graph 下 Agent 列表、调用链视图、Agent 下 Tool 详情、模型平台清单
 - 大纲：背景与目标 / 功能范围 / 4 个新增 GET 接口设计 / 类设计（3 Controller + 3 UseCase 改造）/ 核心业务规则
 - 归属原因：管理接口操作的对象（Graph/Agent/Tool/ModelConfig）全部定义在通用智能体架构中
+
+### Graph 可视化编排（子模块）
+
+- 文件：`通用智能体架构/Graph可视化编排/Graph可视化编排-20260412-v1.md`
+- 摘要：前端使用 Vue Flow + Dagre 以交互式 DAG 流程图展示 Graph 中 Agent 调度关系和 Agent-Tool 绑定关系，支持自定义节点、自动布局、MiniMap、Tool 侧边面板
+- 大纲：背景与目标 / 功能范围（总览图+能力分解图）/ 业务流程（初始化+交互+异常）/ 接口设计（复用 4 API）/ 类设计（5 新建+2 改造）/ 核心业务规则 / 下游依赖（5 npm 包）/ 测试要点
+- 归属原因：可视化的对象（Graph/Agent/Tool）定义在通用智能体架构中，消费的 API 来自平台管理接口补全
+
+### Agent 异步执行机制（子模块）
+
+- 文件：`通用智能体架构/Agent异步执行机制/Agent异步执行机制-20260413-v2.md`（最新）
+- 摘要：Agent 执行从同步阻塞改为异步提交 + 状态轮询 / SSE 推送（Flux 模式）。v2 修正 SSE 分层：AgentSseManager → AgentEventSink + Flux，API 层不再跨层引用 Infrastructure
+- 大纲：背景与目标 / 功能范围（5 能力域）/ 业务流程（异步提交+Flux SSE 推送+异常+状态流转）/ 接口设计（3 端点）/ 类设计（13 类：8 新建+5 改造）/ 核心业务规则（R1-R9）/ 并发与超时控制 / Flux 事件流生命周期 / 异常处理 / 测试要点
+- 历史版本：`Agent异步执行机制-20260412-v1.md`（方案 A，AgentSseManager 直接管理 SseEmitter）
+- 归属原因：改造的 AgentExecutor、AgentExecutionUseCase、AgentController 均定义在通用智能体架构中

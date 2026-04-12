@@ -1,26 +1,30 @@
 package com.exceptioncoder.llm.infrastructure.agent.tool;
 
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.domain.model.ToolDefinition;
 import com.exceptioncoder.llm.domain.model.ToolType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * 启动时扫描所有 @Tool 标注的方法，自动注册到 ToolRegistry
+ * 启动时扫描所有 @Tool 标注的方法，自动注册到 ToolRegistry。
+ *
+ * <p>必须在 DevPlanAgentInitializer(@Order(100)) 之前执行，
+ * 否则 Agent 初始化时 ToolRegistry 为空，导致 tool_ids 绑定丢失。
  */
 @Slf4j
 @Component
+@Order(1)
 public class ToolScanner implements ApplicationListener<ApplicationReadyEvent> {
 
     private final ToolRegistryImpl registry;
@@ -89,6 +93,7 @@ public class ToolScanner implements ApplicationListener<ApplicationReadyEvent> {
                 .inputSchema(schema.toString())
                 .type(ToolType.FUNCTION)
                 .isAsync(false)
+                .roles(Arrays.stream(tool.roles()).map(AgentRole::name).collect(Collectors.toUnmodifiableSet()))
                 .build();
     }
 

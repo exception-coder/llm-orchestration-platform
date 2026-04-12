@@ -1,5 +1,6 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,7 +47,7 @@ public class ProfileSearchTool {
 
     @Tool(name = "devplan_profile_search",
             description = "跨项目语义检索已索引的项目画像，支持按项目名和维度过滤",
-            tags = {"devplan", "search"})
+            tags = {"devplan", "search"}, roles = {AgentRole.REQUIREMENT_ANALYZER, AgentRole.SOLUTION_ARCHITECT})
     public String search(
             @ToolParam(value = "query", description = "语义检索查询文本") String query,
             @ToolParam(value = "projectName", description = "按项目名过滤（精确匹配），不填则跨所有项目", required = false, defaultValue = "\"\"") String projectName,

@@ -1,5 +1,6 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +39,8 @@ public class CodeSearchTool {
         this.vectorStore = vectorStore;
     }
 
-    @Tool(name = "devplan_code_search", description = "语义搜索已索引的代码库", tags = {"devplan", "search"})
+    @Tool(name = "devplan_code_search", description = "语义搜索已索引的代码库",
+          tags = {"devplan", "search"}, roles = {AgentRole.REQUIREMENT_ANALYZER, AgentRole.SOLUTION_ARCHITECT})
     public String search(
             @ToolParam(value = "query", description = "搜索查询文本") String query,
             @ToolParam(value = "topK", description = "返回结果数量", required = false, defaultValue = "\"5\"") String topK

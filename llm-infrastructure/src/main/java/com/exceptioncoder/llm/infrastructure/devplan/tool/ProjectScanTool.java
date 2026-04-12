@@ -1,5 +1,6 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +35,8 @@ public class ProjectScanTool {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Tool(name = "devplan_project_scan", description = "扫描项目目录结构和Maven模块列表", tags = {"devplan", "scan"})
+    @Tool(name = "devplan_project_scan", description = "扫描项目目录结构和Maven模块列表",
+          tags = {"devplan", "scan"}, roles = {AgentRole.CODE_AWARENESS})
     public String scan(
             @ToolParam(value = "projectPath", description = "项目根目录绝对路径") String projectPath
     ) {

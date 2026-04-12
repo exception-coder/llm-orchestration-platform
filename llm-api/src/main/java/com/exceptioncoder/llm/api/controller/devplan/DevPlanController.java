@@ -6,13 +6,14 @@ import com.exceptioncoder.llm.api.dto.devplan.TaskStatusResponse;
 import com.exceptioncoder.llm.application.usecase.DevPlanUseCase;
 import com.exceptioncoder.llm.domain.devplan.model.DevPlanState;
 import com.exceptioncoder.llm.domain.devplan.model.DevPlanTask;
+import com.exceptioncoder.llm.domain.devplan.model.ImpactAnalysis;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
+
 
 /**
  * 开发方案生成 REST 控制器 —— devplan 模块的 HTTP 入口。
@@ -110,7 +111,9 @@ public class DevPlanController {
         DevPlanResponse.ImpactAnalysisVO impact = null;
         if (state.impact() != null) {
             impact = new DevPlanResponse.ImpactAnalysisVO(
-                    state.impact().affectedClasses(),
+                    state.impact().affectedClasses().stream()
+                            .map(ImpactAnalysis.AffectedClass::fullClassName)
+                            .toList(),
                     state.impact().affectedModules(),
                     state.impact().dependencyChain()
             );

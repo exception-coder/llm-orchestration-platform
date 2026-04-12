@@ -1,6 +1,7 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
 import com.exceptioncoder.llm.domain.devplan.analysis.DependencyResult;
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzer;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzerRegistry;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
@@ -38,7 +39,8 @@ public class DependencyAnalysisTool {
         this.analyzerRegistry = analyzerRegistry;
     }
 
-    @Tool(name = "devplan_dependency_analysis", description = "解析pom.xml提取依赖清单和版本信息", tags = {"devplan", "scan"})
+    @Tool(name = "devplan_dependency_analysis", description = "解析pom.xml提取依赖清单和版本信息",
+          tags = {"devplan", "scan"}, roles = {AgentRole.CODE_AWARENESS})
     public String analyze(
             @ToolParam(value = "projectPath", description = "项目根目录绝对路径") String projectPath
     ) {

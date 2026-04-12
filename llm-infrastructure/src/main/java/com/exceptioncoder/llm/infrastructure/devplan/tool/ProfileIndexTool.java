@@ -1,8 +1,10 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.domain.devplan.model.ProfileDimension;
 import com.exceptioncoder.llm.domain.devplan.model.ProfileIndexStatus;
 import com.exceptioncoder.llm.domain.devplan.repository.ProfileIndexStatusRepository;
+import com.exceptioncoder.llm.domain.devplan.service.ProfileIndexService;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolParam;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,7 +39,7 @@ import java.util.*;
  */
 @Slf4j
 @Component
-public class ProfileIndexTool {
+public class ProfileIndexTool implements ProfileIndexService {
 
     private final VectorStore profileVectorStore;
     private final ProfileIndexStatusRepository indexStatusRepository;
@@ -65,7 +67,7 @@ public class ProfileIndexTool {
 
     @Tool(name = "devplan_profile_index",
             description = "将ProjectProfile按7维度分片向量化到Qdrant，支持跨项目语义检索",
-            tags = {"devplan", "index"})
+            tags = {"devplan", "index"}, roles = {AgentRole.CODE_AWARENESS})
     public String indexProfile(
             @ToolParam(value = "projectPath", description = "项目根目录绝对路径") String projectPath,
             @ToolParam(value = "projectName", description = "项目名称，用于跨项目过滤") String projectName,
@@ -155,6 +157,70 @@ public class ProfileIndexTool {
             log.error("ProfileIndexTool 执行失败: project={}", projectPath, e);
             return errorJson("画像索引失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 从 Markdown 按 {@code ## } 标题分片写入 Qdrant（v2 新增入口）。
+     *
+     * @param markdown project-profile.md 的完整内容
+     * @param projectPath 项目根目录绝对路径
+     */
+    public void indexFromMarkdown(String markdown, String projectPath) {
+        try {
+            var reader = new com.exceptioncoder.llm.infrastructure.devplan.profile.ProfileMarkdownReader();
+            Map<ProfileDimension, String> dimensions = reader.parse(markdown);
+            String projectName = extractProjectName(projectPath);
+
+            List<Document> documents = new ArrayList<>();
+            List<ProfileIndexStatus> statuses = new ArrayList<>();
+            int indexedCount = 0;
+            int skippedCount = 0;
+
+            for (var entry : dimensions.entrySet()) {
+                ProfileDimension dimension = entry.getKey();
+                String content = entry.getValue();
+                String contentHash = hashString(content);
+
+                Optional<ProfileIndexStatus> existing =
+                        indexStatusRepository.findByProjectPathAndDimension(projectPath, dimension);
+                if (existing.isPresent() && existing.get().isReady()
+                        && contentHash.equals(existing.get().contentHash())) {
+                    skippedCount++;
+                    continue;
+                }
+
+                String embeddingText = dimension.label() + " - " + projectName + "\n" + content;
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("projectName", projectName);
+                metadata.put("projectPath", projectPath);
+                metadata.put("dimension", dimension.name());
+                metadata.put("dimensionLabel", dimension.label());
+
+                String docId = hashString(projectPath + "::" + dimension.name());
+                documents.add(new Document(docId, embeddingText, metadata));
+
+                statuses.add(new ProfileIndexStatus(
+                        projectPath, projectName, dimension,
+                        "READY", LocalDateTime.now(), contentHash));
+                indexedCount++;
+            }
+
+            if (!documents.isEmpty()) {
+                profileVectorStore.add(documents);
+            }
+            if (!statuses.isEmpty()) {
+                indexStatusRepository.saveAll(statuses);
+            }
+
+            log.info("Markdown 画像索引完成: project={}, indexed={}, skipped={}",
+                    projectName, indexedCount, skippedCount);
+        } catch (Exception e) {
+            log.error("indexFromMarkdown 失败: project={}", projectPath, e);
+        }
+    }
+
+    private String extractProjectName(String projectPath) {
+        return java.nio.file.Path.of(projectPath).getFileName().toString();
     }
 
     private String hashString(String input) {

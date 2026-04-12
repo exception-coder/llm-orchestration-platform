@@ -1,5 +1,6 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolParam;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -84,7 +85,8 @@ public class TemplateRenderTool {
                     """
     );
 
-    @Tool(name = "devplan_template_render", description = "使用预定义模板渲染设计文档", tags = {"devplan", "render"})
+    @Tool(name = "devplan_template_render", description = "使用预定义模板渲染设计文档",
+          tags = {"devplan", "render"}, roles = {AgentRole.SOLUTION_ARCHITECT})
     public String render(
             @ToolParam(value = "templateName", description = "模板名称：STANDARD 或 LIGHTWEIGHT") String templateName,
             @ToolParam(value = "context", description = "JSON格式的模板变量") String context

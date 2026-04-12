@@ -40,6 +40,7 @@ public class DevPlanAgentInitializer implements ApplicationListener<ApplicationR
 
     private final AgentDefinitionRepository agentRepository;
     private final DevPlanAgentConfig agentConfig;
+    private final DevPlanToolRegistry devPlanToolRegistry;
 
     private static final Map<AgentRole, String> AGENT_NAMES = Map.of(
             AgentRole.CODE_AWARENESS, "代码感知分析专家",
@@ -56,26 +57,25 @@ public class DevPlanAgentInitializer implements ApplicationListener<ApplicationR
     );
 
     public DevPlanAgentInitializer(AgentDefinitionRepository agentRepository,
-                                    DevPlanAgentConfig agentConfig) {
+                                    DevPlanAgentConfig agentConfig,
+                                    DevPlanToolRegistry devPlanToolRegistry) {
         this.agentRepository = agentRepository;
         this.agentConfig = agentConfig;
+        this.devPlanToolRegistry = devPlanToolRegistry;
     }
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         int created = 0;
-        int skipped = 0;
+        int updated = 0;
 
         for (AgentRole role : AgentRole.values()) {
             String agentId = agentConfig.getAgentId(role);
+            boolean exists = agentRepository.existsById(agentId);
 
-            if (agentRepository.existsById(agentId)) {
-                log.info("DevPlan Agent 已存在，跳过: agentId={}, role={}", agentId, role);
-                skipped++;
-                continue;
-            }
-
-            List<String> toolIds = DevPlanToolRegistry.ROLE_TOOL_MAPPING.getOrDefault(role, List.of());
+            List<String> toolIds = devPlanToolRegistry.getToolsForRole(role).stream()
+                    .map(def -> def.id())
+                    .toList();
 
             AgentDefinition agent = AgentDefinition.builder()
                     .id(agentId)
@@ -89,12 +89,17 @@ public class DevPlanAgentInitializer implements ApplicationListener<ApplicationR
                     .build();
 
             agentRepository.save(agent);
-            log.info("DevPlan Agent 初始化完成: agentId={}, role={}, toolIds={}",
-                    agentId, role, toolIds);
-            created++;
+
+            if (exists) {
+                log.info("DevPlan Agent 已更新: agentId={}, role={}, toolIds={}", agentId, role, toolIds);
+                updated++;
+            } else {
+                log.info("DevPlan Agent 已创建: agentId={}, role={}, toolIds={}", agentId, role, toolIds);
+                created++;
+            }
         }
 
-        log.info("DevPlan Agent 初始化汇总: 创建={}, 跳过={}", created, skipped);
+        log.info("DevPlan Agent 初始化汇总: 创建={}, 更新={}", created, updated);
     }
 
     @Override

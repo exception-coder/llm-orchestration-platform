@@ -1,5 +1,6 @@
 package com.exceptioncoder.llm.domain.model;
 
+import java.util.Set;
 
 /**
  * 工具定义
@@ -10,7 +11,8 @@ public record ToolDefinition(
         String description,
         String inputSchema,
         ToolType type,
-        boolean isAsync
+        boolean isAsync,
+        Set<String> roles
 ) {
     public ToolDefinition {
         if (id == null || id.isBlank()) {
@@ -20,6 +22,7 @@ public record ToolDefinition(
             throw new IllegalArgumentException("Tool name 不能为空");
         }
         if (type == null) type = ToolType.FUNCTION;
+        if (roles == null) roles = Set.of();
     }
 
     public static Builder builder() {
@@ -33,6 +36,7 @@ public record ToolDefinition(
         private String inputSchema;
         private ToolType type = ToolType.FUNCTION;
         private boolean isAsync = false;
+        private Set<String> roles = Set.of();
 
         public Builder id(String id) { this.id = id; return this; }
         public Builder name(String name) { this.name = name; return this; }
@@ -40,9 +44,10 @@ public record ToolDefinition(
         public Builder inputSchema(String inputSchema) { this.inputSchema = inputSchema; return this; }
         public Builder type(ToolType type) { this.type = type; return this; }
         public Builder isAsync(boolean isAsync) { this.isAsync = isAsync; return this; }
+        public Builder roles(Set<String> roles) { this.roles = roles; return this; }
 
         public ToolDefinition build() {
-            return new ToolDefinition(id, name, description, inputSchema, type, isAsync);
+            return new ToolDefinition(id, name, description, inputSchema, type, isAsync, roles);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
 import com.exceptioncoder.llm.domain.devplan.analysis.ConfigResult;
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzer;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzerRegistry;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
@@ -39,7 +40,8 @@ public class ConfigScanTool {
         this.analyzerRegistry = analyzerRegistry;
     }
 
-    @Tool(name = "devplan_config_scan", description = "读取application配置文件提取关键配置项", tags = {"devplan", "scan"})
+    @Tool(name = "devplan_config_scan", description = "读取application配置文件提取关键配置项",
+          tags = {"devplan", "scan"}, roles = {AgentRole.CODE_AWARENESS})
     public String scan(
             @ToolParam(value = "projectPath", description = "项目根目录绝对路径") String projectPath
     ) {

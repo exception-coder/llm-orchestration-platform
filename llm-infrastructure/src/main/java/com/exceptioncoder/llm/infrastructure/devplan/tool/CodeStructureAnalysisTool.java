@@ -1,6 +1,7 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
 import com.exceptioncoder.llm.domain.devplan.analysis.CodeStructureResult;
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzer;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzerRegistry;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
@@ -40,7 +41,8 @@ public class CodeStructureAnalysisTool {
         this.analyzerRegistry = analyzerRegistry;
     }
 
-    @Tool(name = "devplan_code_structure", description = "扫描Java注解提取Controller/Entity/Service清单和层间依赖", tags = {"devplan", "scan"})
+    @Tool(name = "devplan_code_structure", description = "扫描Java注解提取Controller/Entity/Service清单和层间依赖",
+          tags = {"devplan", "scan"}, roles = {AgentRole.CODE_AWARENESS})
     public String analyze(
             @ToolParam(value = "projectPath", description = "项目根目录绝对路径") String projectPath
     ) {

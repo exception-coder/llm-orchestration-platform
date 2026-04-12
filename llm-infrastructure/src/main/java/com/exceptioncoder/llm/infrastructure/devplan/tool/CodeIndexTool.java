@@ -3,6 +3,7 @@ package com.exceptioncoder.llm.infrastructure.devplan.tool;
 import com.exceptioncoder.llm.domain.devplan.analysis.EmbeddingText;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzer;
 import com.exceptioncoder.llm.domain.devplan.analysis.LanguageAnalyzerRegistry;
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.domain.devplan.model.CodeIndexStatus;
 import com.exceptioncoder.llm.domain.devplan.repository.CodeIndexStatusRepository;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
@@ -52,7 +53,8 @@ public class CodeIndexTool {
         this.analyzerRegistry = analyzerRegistry;
     }
 
-    @Tool(name = "devplan_code_index", description = "将项目Java源文件向量化索引到Qdrant", tags = {"devplan", "index"})
+    @Tool(name = "devplan_code_index", description = "将项目Java源文件向量化索引到Qdrant",
+          tags = {"devplan", "index"}, roles = {AgentRole.CODE_AWARENESS})
     public String indexIfNeeded(
             @ToolParam(value = "projectPath", description = "项目根目录") String projectPath,
             @ToolParam(value = "forceReindex", description = "是否强制重建索引", required = false, defaultValue = "\"false\"") String forceReindex

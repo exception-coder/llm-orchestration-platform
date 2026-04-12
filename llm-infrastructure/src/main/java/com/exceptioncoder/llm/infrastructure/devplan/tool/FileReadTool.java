@@ -1,5 +1,6 @@
 package com.exceptioncoder.llm.infrastructure.devplan.tool;
 
+import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
 import com.exceptioncoder.llm.infrastructure.agent.tool.Tool;
 import com.exceptioncoder.llm.infrastructure.agent.tool.ToolParam;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,8 @@ import java.util.stream.Stream;
 @Component
 public class FileReadTool {
 
-    @Tool(name = "devplan_file_read", description = "读取指定文件内容", tags = {"devplan", "read"})
+    @Tool(name = "devplan_file_read", description = "读取指定文件内容",
+          tags = {"devplan", "read"}, roles = {AgentRole.REQUIREMENT_ANALYZER})
     public String readFile(
             @ToolParam(value = "filePath", description = "文件绝对路径") String filePath,
             @ToolParam(value = "maxLines", description = "最大行数", required = false, defaultValue = "\"200\"") String maxLines

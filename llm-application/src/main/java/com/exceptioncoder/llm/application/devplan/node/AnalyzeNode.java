@@ -6,29 +6,21 @@ import com.exceptioncoder.llm.domain.devplan.model.DevPlanState;
 import com.exceptioncoder.llm.domain.devplan.model.ImpactAnalysis;
 import com.exceptioncoder.llm.domain.devplan.model.RequirementIntent;
 import com.exceptioncoder.llm.domain.devplan.service.DevPlanAgentRouter;
+import com.exceptioncoder.llm.domain.devplan.service.ProfileReader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * 需求分析节点（AnalyzeNode）—— 开发方案生成流程的第二个执行节点。
  *
- * <p>本类属于 <b>应用层（Application Layer）</b>，是 devplan 模块 StateGraph 的 Node 2。
- * 职责是调用 {@link AgentRole#REQUIREMENT_ANALYZER} Agent 对用户需求进行深度分析，
- * 提取需求意图（{@link RequirementIntent}）和影响面分析（{@link ImpactAnalysis}），
- * 并将结果写入不可变的 {@link DevPlanState} 传递给下游节点。</p>
+ * <p>v2 改造：加载 {@code business-context.md} 作为需求分析的核心上下文，
+ * <b>不加载</b> {@code coding-conventions.md}，避免编码约定干扰需求分析产生幻觉。</p>
  *
- * <h3>设计思路</h3>
- * <ul>
- *   <li>在 ScanNode 获取到项目结构之后执行，利用上下文中的结构信息辅助需求理解</li>
- *   <li>通过 {@link DevPlanAgentRouter} 路由到具体的 Agent 实现，保持节点与 Agent 解耦</li>
- *   <li>记录节点执行耗时和 Token 使用量，供下游统计和监控使用</li>
- * </ul>
- *
- * <h3>协作关系</h3>
- * <ul>
- *   <li>{@link DevPlanAgentRouter} — Agent 路由器，将请求分发到 REQUIREMENT_ANALYZER Agent</li>
- *   <li>{@link DevPlanFlowDefinition} — 流程编排器，在 ScanNode 之后调用本节点</li>
- * </ul>
+ * <p>当 {@code business-context.md} 不存在时，自动降级为 v1 模式（纯搜索推理），
+ * 并在输出中标注 {@code degraded=true}。</p>
  *
  * @author zhangkai
  * @since 2026-04-06
@@ -37,16 +29,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class AnalyzeNode {
 
-    /** Agent 路由器 —— 将请求分发到对应角色的 Agent 实现 */
     private final DevPlanAgentRouter agentRouter;
+    private final ProfileReader profileReader;
 
-    /**
-     * 构造 AnalyzeNode 实例。
-     *
-     * @param agentRouter Agent 路由器，用于将请求分发到 REQUIREMENT_ANALYZER Agent
-     */
-    public AnalyzeNode(DevPlanAgentRouter agentRouter) {
+    public AnalyzeNode(DevPlanAgentRouter agentRouter, ProfileReader profileReader) {
         this.agentRouter = agentRouter;
+        this.profileReader = profileReader;
     }
 
     /**
@@ -54,38 +42,59 @@ public class AnalyzeNode {
      *
      * <p>处理步骤：</p>
      * <ol>
-     *   <li>调用 REQUIREMENT_ANALYZER Agent 分析用户需求</li>
-     *   <li>从 Agent 输出中提取 {@link RequirementIntent} 和 {@link ImpactAnalysis}</li>
-     *   <li>记录节点执行耗时和 Token 使用量</li>
-     *   <li>构建新的 {@link DevPlanState} 并返回，状态标记为 {@code ANALYZING_COMPLETE}</li>
+     *   <li>加载 business-context.md（不存在则降级）</li>
+     *   <li>将 businessContext 注入 State，调用 REQUIREMENT_ANALYZER Agent</li>
+     *   <li>从 Agent 输出中提取 {@link ImpactAnalysis}</li>
+     *   <li>构建新的 {@link DevPlanState} 并返回</li>
      * </ol>
-     *
-     * @param state 上游传入的流程状态，需包含 ScanNode 产出的项目结构与架构拓扑
-     * @return 包含需求意图和影响面分析的新状态
      */
     public DevPlanState execute(DevPlanState state) {
         log.info("执行 AnalyzeNode，taskId={}", state.taskId());
         long start = System.currentTimeMillis();
 
-        // 1. 调用 REQUIREMENT_ANALYZER Agent 深度分析用户需求
-        AgentOutput output = agentRouter.route(AgentRole.REQUIREMENT_ANALYZER, state);
+        // 1. 加载 business-context.md（按需加载，不加载 coding-conventions.md）
+        String businessContext = loadBusinessContext(state.projectPath());
 
-        // 2. 记录节点执行耗时和 Token 使用量
+        // 2. 将 businessContext 注入 State，供 Agent Prompt 消费
+        DevPlanState enrichedState = DevPlanState.builder()
+                .taskId(state.taskId())
+                .projectPath(state.projectPath())
+                .requirement(state.requirement())
+                .projectProfile(state.projectProfile())
+                .businessContext(businessContext)
+                .structure(state.structure())
+                .topology(state.topology())
+                .status(state.status())
+                .nodeTimings(state.nodeTimings())
+                .agentTokenUsage(state.agentTokenUsage())
+                .correctionCount(state.correctionCount())
+                .reviewIssues(state.reviewIssues())
+                .build();
+
+        // 3. 调用 REQUIREMENT_ANALYZER Agent
+        AgentOutput output = agentRouter.route(AgentRole.REQUIREMENT_ANALYZER, enrichedState);
+
+        // 4. 记录耗时和 Token
         long elapsed = System.currentTimeMillis() - start;
         var timings = new java.util.HashMap<>(state.nodeTimings());
         timings.put("analyze", elapsed);
         var tokenUsage = new java.util.HashMap<>(state.agentTokenUsage());
         tokenUsage.put(AgentRole.REQUIREMENT_ANALYZER.name(), output.tokenUsage());
 
-        // 3. 从 Agent 结构化输出中提取需求意图和影响面分析
+        // 5. 提取结构化输出
         RequirementIntent intent = (RequirementIntent) output.structuredData().get("intent");
         ImpactAnalysis impact = (ImpactAnalysis) output.structuredData().get("impact");
 
-        // 4. 构建新的不可变 State，携带本节点产出传递给下游
+        log.info("AnalyzeNode 完成，taskId={}，耗时={}ms，degraded={}",
+                state.taskId(), elapsed, businessContext == null);
+
+        // 6. 构建新 State
         return DevPlanState.builder()
                 .taskId(state.taskId())
                 .projectPath(state.projectPath())
                 .requirement(state.requirement())
+                .projectProfile(state.projectProfile())
+                .businessContext(businessContext)
                 .structure(state.structure())
                 .topology(state.topology())
                 .intent(intent)
@@ -96,5 +105,20 @@ public class AnalyzeNode {
                 .correctionCount(state.correctionCount())
                 .reviewIssues(state.reviewIssues())
                 .build();
+    }
+
+    /**
+     * 加载 business-context.md。不存在时返回 null（触发降级到 v1 纯搜索模式）。
+     */
+    private String loadBusinessContext(String projectPath) {
+        Path contextPath = Path.of(projectPath, "docs", "business-context.md");
+        try {
+            String content = profileReader.readFull(contextPath);
+            log.info("business-context.md loaded, {} chars", content.length());
+            return content;
+        } catch (IOException e) {
+            log.warn("business-context.md not found at {}, degrading to v1 mode", contextPath);
+            return null;
+        }
     }
 }

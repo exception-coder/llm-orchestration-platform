@@ -17,8 +17,10 @@ public record DevPlanState(
         String taskId,                          // 任务唯一标识
         String projectPath,                     // 目标项目的本地路径
         String requirement,                     // 用户输入的原始需求文本
-        ProjectStructure structure,             // 代码感知阶段输出的项目结构
-        ArchTopology topology,                  // 代码感知阶段输出的架构拓扑
+        String projectProfile,                  // project-profile.md 原文（索引 + 概述 + 技术栈）
+        String businessContext,                 // business-context.md 原文（需求分析/方案设计消费）
+        @Deprecated ProjectStructure structure, // 代码感知阶段输出的项目结构（v2 废弃，Fallback 兼容）
+        @Deprecated ArchTopology topology,      // 代码感知阶段输出的架构拓扑（v2 废弃，Fallback 兼容）
         RequirementIntent intent,               // 需求分析阶段输出的意图识别结果
         ImpactAnalysis impact,                  // 需求分析阶段输出的影响范围分析
         DevPlanDocument document,               // 方案设计阶段输出的设计文档
@@ -37,6 +39,8 @@ public record DevPlanState(
         private String taskId;
         private String projectPath;
         private String requirement;
+        private String projectProfile;
+        private String businessContext;
         private ProjectStructure structure;
         private ArchTopology topology;
         private RequirementIntent intent;
@@ -52,6 +56,8 @@ public record DevPlanState(
         public Builder taskId(String taskId) { this.taskId = taskId; return this; }
         public Builder projectPath(String projectPath) { this.projectPath = projectPath; return this; }
         public Builder requirement(String requirement) { this.requirement = requirement; return this; }
+        public Builder projectProfile(String projectProfile) { this.projectProfile = projectProfile; return this; }
+        public Builder businessContext(String businessContext) { this.businessContext = businessContext; return this; }
         public Builder structure(ProjectStructure structure) { this.structure = structure; return this; }
         public Builder topology(ArchTopology topology) { this.topology = topology; return this; }
         public Builder intent(RequirementIntent intent) { this.intent = intent; return this; }
@@ -65,9 +71,9 @@ public record DevPlanState(
         public Builder agentTokenUsage(Map<String, Integer> agentTokenUsage) { this.agentTokenUsage = agentTokenUsage; return this; }
 
         public DevPlanState build() {
-            return new DevPlanState(taskId, projectPath, requirement, structure, topology,
-                    intent, impact, document, validation, reviewIssues, correctionCount,
-                    status, nodeTimings, agentTokenUsage);
+            return new DevPlanState(taskId, projectPath, requirement, projectProfile,
+                    businessContext, structure, topology, intent, impact, document, validation,
+                    reviewIssues, correctionCount, status, nodeTimings, agentTokenUsage);
         }
     }
 }

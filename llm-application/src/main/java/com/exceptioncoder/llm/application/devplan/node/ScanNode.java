@@ -1,34 +1,30 @@
 package com.exceptioncoder.llm.application.devplan.node;
 
-import com.exceptioncoder.llm.domain.devplan.model.AgentOutput;
-import com.exceptioncoder.llm.domain.devplan.model.AgentRole;
-import com.exceptioncoder.llm.domain.devplan.model.ArchTopology;
 import com.exceptioncoder.llm.domain.devplan.model.DevPlanState;
-import com.exceptioncoder.llm.domain.devplan.model.ProjectStructure;
-import com.exceptioncoder.llm.domain.devplan.service.DevPlanAgentRouter;
+import com.exceptioncoder.llm.domain.devplan.service.ProfileCacheStrategy;
+import com.exceptioncoder.llm.domain.devplan.service.ProfileGeneratorService;
+import com.exceptioncoder.llm.domain.devplan.service.ProfileIndexService;
+import com.exceptioncoder.llm.domain.devplan.service.ProfileReader;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
 
 /**
  * 代码感知节点（ScanNode）—— 开发方案生成流程的第一个执行节点。
  *
- * <p>本类属于 <b>应用层（Application Layer）</b>，是 devplan 模块 StateGraph 的 Node 1。
- * 职责是调用 {@link AgentRole#CODE_AWARENESS} Agent 对目标项目进行代码扫描，
- * 提取项目结构（{@link ProjectStructure}）和架构拓扑（{@link ArchTopology}），
- * 并将结果写入不可变的 {@link DevPlanState} 传递给下游节点。</p>
- *
- * <h3>设计思路</h3>
+ * <p>v2 重构：从"实时扫描 + LLM 综合"改为"Markdown 缓存 + SPI 生成器链"模式。
  * <ul>
- *   <li>每个 Node 只负责调用对应 Agent 并将结果写入 State，保持编排逻辑的简洁性</li>
- *   <li>通过 {@link DevPlanAgentRouter} 路由到具体的 Agent 实现，实现节点与 Agent 的解耦</li>
- *   <li>记录节点执行耗时和 Token 使用量，供下游统计和监控使用</li>
+ *   <li>缓存命中：直接读取 {@code docs/project-profile.md}，&lt; 100ms</li>
+ *   <li>缓存未命中：通过 {@link ProfileGeneratorService} 按优先级尝试生成</li>
+ *   <li>异步：生成完成后异步调用 {@link ProfileIndexService} 写入 Qdrant</li>
  * </ul>
  *
- * <h3>协作关系</h3>
- * <ul>
- *   <li>{@link DevPlanAgentRouter} — Agent 路由器，将请求分发到 CODE_AWARENESS Agent</li>
- *   <li>{@link DevPlanFlowDefinition} — 流程编排器，按顺序调用本节点</li>
- * </ul>
+ * <p>本类仅依赖 Domain 层接口，通过 Spring 注入获取 Infrastructure 层实现。
  *
  * @author zhangkai
  * @since 2026-04-06
@@ -37,16 +33,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class ScanNode {
 
-    /** Agent 路由器 —— 将请求分发到对应角色的 Agent 实现 */
-    private final DevPlanAgentRouter agentRouter;
+    private final ProfileGeneratorService generatorService;
+    private final ProfileReader profileReader;
+    private final ProfileIndexService profileIndexService;
+    private final ProfileCacheStrategy cacheStrategy;
 
-    /**
-     * 构造 ScanNode 实例。
-     *
-     * @param agentRouter Agent 路由器，用于将请求分发到 CODE_AWARENESS Agent
-     */
-    public ScanNode(DevPlanAgentRouter agentRouter) {
-        this.agentRouter = agentRouter;
+    public ScanNode(ProfileGeneratorService generatorService,
+                    ProfileReader profileReader,
+                    ProfileIndexService profileIndexService,
+                    ProfileCacheStrategy cacheStrategy) {
+        this.generatorService = generatorService;
+        this.profileReader = profileReader;
+        this.profileIndexService = profileIndexService;
+        this.cacheStrategy = cacheStrategy;
     }
 
     /**
@@ -54,45 +53,74 @@ public class ScanNode {
      *
      * <p>处理步骤：</p>
      * <ol>
-     *   <li>调用 CODE_AWARENESS Agent 扫描目标项目</li>
-     *   <li>从 Agent 输出中提取 {@link ProjectStructure} 和 {@link ArchTopology}</li>
-     *   <li>记录节点执行耗时和 Token 使用量</li>
-     *   <li>构建新的 {@link DevPlanState} 并返回，状态标记为 {@code SCANNING_COMPLETE}</li>
+     *   <li>检查 project-profile.md 是否存在且未过期</li>
+     *   <li>命中缓存则直接读取；否则走 ProfileGeneratorService</li>
+     *   <li>异步触发 ProfileIndexService 按维度分片写入 Qdrant</li>
+     *   <li>构建新的 {@link DevPlanState}，状态标记为 SCANNING_COMPLETE</li>
      * </ol>
-     *
-     * @param state 上游传入的流程状态，需包含 projectPath 等基础信息
-     * @return 包含项目结构和架构拓扑的新状态
      */
     public DevPlanState execute(DevPlanState state) {
         log.info("执行 ScanNode，projectPath={}", state.projectPath());
         long start = System.currentTimeMillis();
+        String markdown;
 
-        // 1. 调用 CODE_AWARENESS Agent 扫描目标项目的代码结构和架构拓扑
-        AgentOutput output = agentRouter.route(AgentRole.CODE_AWARENESS, state);
+        Path profilePath = Path.of(state.projectPath(), "docs", "project-profile.md");
 
-        // 2. 记录节点执行耗时和 Token 使用量
+        if (cacheStrategy.isFresh(profilePath, state.projectPath())) {
+            try {
+                markdown = profileReader.readFull(profilePath);
+                log.info("Profile cache hit for {}", state.projectPath());
+            } catch (IOException e) {
+                log.warn("Failed to read cached profile, falling back to generation", e);
+                markdown = generateAndPersist(state.projectPath(), profilePath);
+            }
+        } else {
+            markdown = generateAndPersist(state.projectPath(), profilePath);
+        }
+
         long elapsed = System.currentTimeMillis() - start;
-        var timings = new java.util.HashMap<>(state.nodeTimings());
+        var timings = new HashMap<>(state.nodeTimings());
         timings.put("scan", elapsed);
-        var tokenUsage = new java.util.HashMap<>(state.agentTokenUsage());
-        tokenUsage.put(AgentRole.CODE_AWARENESS.name(), output.tokenUsage());
 
-        // 3. 从 Agent 结构化输出中提取项目结构和架构拓扑
-        ProjectStructure structure = (ProjectStructure) output.structuredData().get("structure");
-        ArchTopology topology = (ArchTopology) output.structuredData().get("topology");
+        // 异步向量化
+        asyncIndexProfile(markdown, state.projectPath());
 
-        // 4. 构建新的不可变 State，携带本节点产出传递给下游
         return DevPlanState.builder()
                 .taskId(state.taskId())
                 .projectPath(state.projectPath())
                 .requirement(state.requirement())
-                .structure(structure)
-                .topology(topology)
+                .projectProfile(markdown)
                 .status("SCANNING_COMPLETE")
                 .nodeTimings(timings)
-                .agentTokenUsage(tokenUsage)
+                .agentTokenUsage(state.agentTokenUsage())
                 .correctionCount(state.correctionCount())
                 .reviewIssues(state.reviewIssues())
                 .build();
+    }
+
+    private String generateAndPersist(String projectPath, Path profilePath) {
+        String markdown = generatorService.generateOrThrow(projectPath);
+
+        // ClaudeCode 会自己写文件，Fallback 需要手动写
+        if (!Files.exists(profilePath)) {
+            try {
+                Files.createDirectories(profilePath.getParent());
+                Files.writeString(profilePath, markdown);
+                log.info("Profile written to {}", profilePath);
+            } catch (IOException e) {
+                log.warn("Failed to persist profile to {}", profilePath, e);
+            }
+        }
+
+        return markdown;
+    }
+
+    @Async
+    void asyncIndexProfile(String markdown, String projectPath) {
+        try {
+            profileIndexService.indexFromMarkdown(markdown, projectPath);
+        } catch (Exception e) {
+            log.warn("Async profile indexing failed for {}", projectPath, e);
+        }
     }
 }

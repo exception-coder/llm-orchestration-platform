@@ -11,9 +11,10 @@
 - 大纲：背景与目标 / 功能范围 / 业务流程 / 接口设计 / 类设计 / 数据库设计 / 核心业务规则
 
 ## 通用智能体架构
-- 文件：`通用智能体架构-20260404-v1.md`
-- 摘要：定义通用 Agent 7 核心环节（Input/Memory/Planning/Reasoning/Tool Selection/Tool Execution/Observation/Output），新增 AgentLoop 核心接口及 5 个策略接口，提供 ReActLoop 实现
-- 大纲：背景与目标 / 功能范围 / 7 环节业务流程 / 接口设计 / 类设计 / 核心业务规则 / 异常处理 / 测试要点 / 上线方案
+- 文件：`通用智能体架构-20260414-v2.md`（最新）
+- 摘要：对齐代码实际实现的架构基线文档 — AgentExecutor + ReAct 循环、GraphExecutionEngine DAG 编排、异步执行 + Flux SSE、@Tool 注解驱动注册、@AgentGroup 多智能体编排、三级记忆体系、全链路 Trace、LLMProviderRouter 限速降级
+- 大纲：背景与 v1 差异说明 / 功能模块总览图 / Agent ReAct 执行流程 / Graph DAG 编排流程 / 异步执行流程 / 接口设计（6 核心接口）/ 类设计（35+ 类）/ 业务规则（R1-R10）/ Provider 路由降级 / Trace / 记忆体系
+- 历史版本：`通用智能体架构-20260404-v1.md`（初始蓝图，AgentLoop + 5 策略接口设计，未按原方案实施）
 
 ### 多平台模型路由层（子模块）
 - 文件：`通用智能体架构/多平台模型路由层/多平台模型路由层-20260331-v1.md`

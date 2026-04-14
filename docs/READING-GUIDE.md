@@ -37,7 +37,7 @@
 
 | 序号 | 文档 | 说明 |
 |:---:|------|------|
-| 8 | [design/通用智能体架构/通用智能体架构-20260404-v1.md](design/通用智能体架构/通用智能体架构-20260404-v1.md) | Agent 7 核心环节 + ReActLoop 实现 |
+| 8 | [design/通用智能体架构/通用智能体架构-20260414-v2.md](design/通用智能体架构/通用智能体架构-20260414-v2.md) | 架构基线：AgentExecutor + Graph DAG + 异步执行 + 工具体系 + Provider 路由 |
 | 9 | [design/通用智能体架构/Agent全链路Trace设计/Agent全链路Trace设计-20260412-v1.md](design/通用智能体架构/Agent全链路Trace设计/Agent全链路Trace设计-20260412-v1.md) | 全链路追踪标准 |
 | 10 | [design/通用智能体架构/Agent异步执行机制/Agent异步执行机制-20260413-v2.md](design/通用智能体架构/Agent异步执行机制/Agent异步执行机制-20260413-v2.md) | 异步提交 + SSE Flux 推送 |
 | 11 | [design/通用智能体架构/Graph可视化编排/Graph可视化编排-20260412-v1.md](design/通用智能体架构/Graph可视化编排/Graph可视化编排-20260412-v1.md) | Vue Flow DAG 可视化编排 |

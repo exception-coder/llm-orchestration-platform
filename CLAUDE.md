@@ -161,6 +161,25 @@ llm-api → llm-application → llm-domain ← llm-infrastructure
 
 `docs/` 下文档发生新增、移动或删除时，**必须**同步更新 `docs/READING-GUIDE.md`，确保阅读顺序、链接和序号与实际文档一致。
 
+## 通用智能体架构文档同步
+
+`docs/design/通用智能体架构/通用智能体架构-{date}-{version}.md` 是平台级架构基线文档。当发生以下变更时，**必须**基于当前代码实际状态生成新版本（日期+版本号递增）：
+
+- Agent 执行器（AgentExecutor / AgentLoop）接口或实现发生重大变更
+- Graph 编排引擎新增节点类型或执行模式
+- 异步执行 / SSE 推送机制变更
+- 工具注册与选择机制变更
+- 记忆体系（Memory）新增层级或实现
+- Trace / 可观测性方案变更
+- LLM Provider 路由或降级策略变更
+- 新增智能体（Agent Group）影响通用架构层
+
+更新要求：
+1. 保留历史版本文件不动，新建文件如 `通用智能体架构-20260414-v2.md`
+2. 变更记录表追加新行，摘要说明本次变更
+3. 文档内容**必须对照代码实际实现**，不可照搬旧版本未实现的设计
+4. 同步更新 `docs/design/INDEX.md` 和 `docs/READING-GUIDE.md` 中的链接
+
 ## 开发日志
 
 **每次代码变更必须追加**到对应周的 `docs/dev/dev-log-YYYY-WNN.md`（ISO 8601 周次），包含：日期、任务描述、变更文件、关键设计决策。

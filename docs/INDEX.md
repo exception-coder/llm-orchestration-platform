@@ -2,6 +2,7 @@
 
 | 目录 | 说明 |
 |------|------|
+| [READING-GUIDE.md](READING-GUIDE.md) | 阅读引导（建议阅读顺序） |
 | [design/](design/INDEX.md) | 功能设计文档 |
 | [developer-guide/](developer-guide/INDEX.md) | 开发者指南 |
 | [dev/](dev/) | 开发日志 |

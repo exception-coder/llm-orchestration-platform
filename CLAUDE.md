@@ -157,6 +157,10 @@ llm-api → llm-application → llm-domain ← llm-infrastructure
 
 每次功能讨论结束、进入实现前，必须先调用 `team-standards:design-doc-required` skill，检查或创建设计文档，然后再进入实现计划。
 
+## 阅读引导同步
+
+`docs/` 下文档发生新增、移动或删除时，**必须**同步更新 `docs/READING-GUIDE.md`，确保阅读顺序、链接和序号与实际文档一致。
+
 ## 开发日志
 
 **每次代码变更必须追加**到对应周的 `docs/dev/dev-log-YYYY-WNN.md`（ISO 8601 周次），包含：日期、任务描述、变更文件、关键设计决策。

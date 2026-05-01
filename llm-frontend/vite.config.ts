@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
-    vue(),
-    tailwindcss(), // 激活 Tailwind v4 引擎
+    react(),
+    tailwindcss(),
   ],
   resolve: {
     alias: {

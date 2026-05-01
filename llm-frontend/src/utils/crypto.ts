@@ -1,17 +1,8 @@
 /**
  * AES-GCM 客户端加密工具
- * 使用 Web Crypto API (SubtleCrypto) 实现
- * 密钥派生：PBKDF2（用户密码 → AES-GCM 密钥）
- * 加密：AES-GCM 256-bit，随机 IV，IV 与密文一起存储
  */
 
-/**
- * 从用户密码派生 AES-GCM 密钥
- * @param {string} password 用户密码
- * @param {Uint8Array} salt 盐值（16字节）
- * @returns {Promise<CryptoKey>}
- */
-async function deriveKey(password, salt) {
+async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
   const encoder = new TextEncoder()
   const passwordKey = await crypto.subtle.importKey(
     'raw',
@@ -35,13 +26,7 @@ async function deriveKey(password, salt) {
   )
 }
 
-/**
- * 加密文本
- * @param {string} plaintext 明文
- * @param {string} password 用户密码
- * @returns {Promise<string>} Base64 编码的加密结果（salt + iv + ciphertext）
- */
-export async function encrypt(plaintext, password) {
+export async function encrypt(plaintext: string, password: string): Promise<string> {
   const encoder = new TextEncoder()
   const salt = crypto.getRandomValues(new Uint8Array(16))
   const iv = crypto.getRandomValues(new Uint8Array(12))
@@ -54,28 +39,18 @@ export async function encrypt(plaintext, password) {
     encoder.encode(plaintext)
   )
 
-  // 合并 salt + iv + ciphertext
   const combined = new Uint8Array(salt.length + iv.length + ciphertext.byteLength)
   combined.set(salt, 0)
   combined.set(iv, salt.length)
   combined.set(new Uint8Array(ciphertext), salt.length + iv.length)
 
-  // 返回 Base64 编码
   return btoa(String.fromCharCode(...combined))
 }
 
-/**
- * 解密文本
- * @param {string} encryptedData Base64 编码的加密数据
- * @param {string} password 用户密码
- * @returns {Promise<string>} 解密后的明文
- */
-export async function decrypt(encryptedData, password) {
+export async function decrypt(encryptedData: string, password: string): Promise<string> {
   try {
-    // Base64 解码
     const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0))
 
-    // 提取 salt, iv, ciphertext
     const salt = combined.slice(0, 16)
     const iv = combined.slice(16, 28)
     const ciphertext = combined.slice(28)

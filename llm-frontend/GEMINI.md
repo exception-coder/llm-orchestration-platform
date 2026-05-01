@@ -1,37 +1,38 @@
-# GEMINI.md - LLM Frontend
+# GEMINI.md - LLM Frontend (React Version)
 
-This document provides updated context and guidelines for the LLM Frontend project, reflecting the latest architectural refinements and development conventions.
+This document provides updated context and guidelines for the LLM Frontend project, which has been migrated from Vue 3 to React.
 
 ## Project Overview
 
-The **LLM Frontend** is a modern web application serving as the interface for an LLM orchestration platform. It is built with **Vue 3 (Composition API)**, **Vite**, and **Element Plus**.
+The **LLM Frontend** is a modern web application serving as the interface for an LLM orchestration platform. It is built with **React 19**, **Vite**, and **Tailwind CSS v4**.
 
 ### Main Technologies
 
-- **Framework:** Vue 3 (Composition API with `<script setup>`)
+- **Framework:** React 19 (Functional Components with Hooks)
 - **Build Tool:** Vite
-- **UI Components:** Element Plus (with `@element-plus/icons-vue` icons)
-- **State Management:** Pinia (Currently managed within components; no global stores yet)
-- **Routing:** Vue Router (Lazy-loaded views)
+- **Styling:** Tailwind CSS v4 (with Neumorphism design system)
+- **Routing:** React Router 7
+- **State Management:** React Hooks (useState, useMemo, etc.)
+- **Icons:** Lucide React
+- **Animation:** Framer Motion
+- **Flow/Graph:** @xyflow/react (React Flow)
 - **HTTP Client:** Axios (for standard requests) & Fetch (for SSE)
-- **Security:** AES-GCM Client-side encryption (Web Crypto API)
-- **Content:** `marked` for Markdown, `highlight.js` for code highlighting, `html2canvas` for image generation.
 
 ## Architecture & Directory Structure
 
-- `src/api/index.js`: Centralized API definitions grouped by business logic (`promptTestAPI`, `chatAPI`, `noteAPI`, `docViewerAPI`, `secretaryAPI`, etc.).
-- `src/composables/`: Reusable logic layer:
-    - `useMarkdown.js`: Configured `marked` and `highlight.js` for consistent rendering.
-    - `useResponsive.js`: Mobile/Desktop breakpoint detection with automatic resize listeners.
-    - `useSSEStream.js`: Encapsulated SSE handling (POST + line-by-line parsing).
+- `src/api/index.ts`: Centralized API definitions grouped by business logic.
+- `src/hooks/`: Reusable logic layer:
+    - `useMarkdown.ts`: Configured `marked` and `highlight.js` for consistent rendering.
+    - `useResponsive.ts`: Mobile/Desktop breakpoint detection.
+    - `useSSEStream.ts`: Encapsulated SSE handling (POST + line-by-line parsing).
+    - `useGraphLayout.ts`: Dagre-based layout for flow graphs.
 - `src/styles/`: 
-    - `variables.css`: Centralized theme management via CSS custom properties (`--app-*`).
-    - `markdown.css`: Shared styling for `.markdown-rendered` containers.
+    - `index.css`: Tailwind v4 entry with theme definitions.
 - `src/utils/`:
-    - `request.js`: Axios instance with baseURL `/api/v1` and unified error messaging.
-    - `crypto.js`: AES-GCM encryption/decryption for sensitive data (e.g., Note Capture).
-- `src/views/`: Page-level components implementing core features.
-- `src/App.vue`: Root layout with a responsive sidebar navigation (using `el-sub-menu`) and main content area.
+    - `request.ts`: Axios instance with baseURL `/api/v1`.
+    - `crypto.ts`: AES-GCM encryption/decryption.
+- `src/views/`: Page-level components.
+- `src/App.tsx`: Root layout with a responsive sidebar and theme management.
 
 ## Building and Running
 
@@ -42,44 +43,24 @@ The **LLM Frontend** is a modern web application serving as the interface for an
 npm install
 
 # Start development server (Port 3000)
-# Proxy redirects /api to http://localhost:8080
 npm run dev
-```
-
-### Production
-
-```bash
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
 ```
 
 ## Development Conventions
 
-- **Component Style:** Use **`<script setup>`** and Composition API exclusively. **Avoid Options API.**
+- **Component Style:** Use Functional Components and Hooks.
 - **UI Standards:**
-    - Use **Element Plus** components. Icons are globally registered.
-    - **No Hardcoded Colors:** Always use CSS variables from `src/styles/variables.css` (e.g., `var(--app-color-primary)`).
+    - Use Tailwind CSS v4 utility classes.
+    - Neumorphism classes: `.neo-convex` (elevated), `.neo-concave` (inset).
 - **Logic Reuse:**
-    - Use `useResponsive()` for mobile checks instead of direct `window.innerWidth`.
-    - Use `useMarkdown()` for all Markdown rendering; apply `class="markdown-rendered"` to containers.
-    - Use `useSSEStream()`'s `fetchSSE` for any streaming LLM responses.
-- **API Communication:**
-    - Standard requests: Use the `request` utility from `src/utils/request.js`.
-    - New endpoints: Add to `src/api/index.js`.
-- **Workflow for New Pages:**
-    1. Create `.vue` file in `src/views/`.
-    2. Add lazy-loaded route to `src/router/index.js`.
-    3. Update sidebar menu in `App.vue` (under appropriate `el-sub-menu`).
-    4. Define required APIs in `src/api/index.js`.
+    - Use `useResponsive()` for mobile checks.
+    - Use `useMarkdown()` for all Markdown rendering.
+    - Use `useSSEStream()`'s `fetchSSE` for streaming LLM responses.
 
 ## Core Features
 
 - **Prompt Engineering:** Visual testing, comparison, and template management.
-- **Content Optimization:** Platform-specific refining (Red, TikTok, etc.).
-- **Smart Note Capture:** Encrypted notes with AI-based categorization.
-- **Doc Viewer:** Documentation tree browsing with search and indexing.
-- **AI Secretary:** Specialized chat with memory and tool integration.
-- **Markdown-to-Image:** Exporting styled Markdown content as images with multiple templates.
+- **Content Optimization:** Platform-specific refining.
+- **Smart Note Capture:** Encrypted notes with AI categorization.
+- **Doc Viewer:** Documentation tree browsing with search.
+- **Agent Orchestration:** Visual graph-based agent flow construction using React Flow.

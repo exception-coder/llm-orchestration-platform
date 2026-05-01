@@ -1,13 +1,13 @@
 import dagre from '@dagrejs/dagre'
 
 /**
- * 使用 Dagre 算法对 Vue Flow 节点进行自动布局
- * @param {Array} nodes - Vue Flow nodes（position 会被覆盖）
- * @param {Array} edges - Vue Flow edges
- * @param {Object} options - 布局选项
- * @returns {Array} 带计算后 position 的 nodes 副本
+ * 使用 Dagre 算法对 XYFlow 节点进行自动布局
+ * @param nodes - XYFlow nodes（position 会被覆盖）
+ * @param edges - XYFlow edges
+ * @param options - 布局选项
+ * @returns 带计算后 position 的 nodes 副本
  */
-export function useGraphLayout(nodes, edges, options = {}) {
+export function useGraphLayout(nodes: any[], edges: any[], options: any = {}) {
   const {
     direction = 'TB',
     nodeWidth = 200,

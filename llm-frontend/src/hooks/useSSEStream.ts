@@ -1,19 +1,28 @@
+import { useCallback } from 'react'
+
+interface SSECallbacks {
+  onContent?: (content: string) => void
+  onTokenUsage?: (usage: any) => void
+}
+
 /**
- * SSE 流式请求 composable
- * 统一封装 POST + SSE 解析逻辑，替代各视图中重复的 fetch + ReadableStream 代码
+ * SSE 流式请求 Hook
+ * 统一封装 POST + SSE 解析逻辑
  */
 export function useSSEStream() {
-  const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+  const apiBaseURL = (import.meta.env.VITE_API_BASE_URL as string) || '/api/v1'
 
   /**
    * 发送 POST 请求并逐行解析 SSE 流
-   * @param {string} url   API 路径，例如 '/chat/stream'
-   * @param {object} body  请求体
-   * @param {object} callbacks
-   * @param {function} [callbacks.onContent]    收到文本片段时回调
-   * @param {function} [callbacks.onTokenUsage] 收到 token 统计时回调
+   * @param url API 路径，例如 '/chat/stream'
+   * @param body 请求体
+   * @param callbacks 回调函数
    */
-  async function fetchSSE(url, body, { onContent, onTokenUsage } = {}) {
+  const fetchSSE = useCallback(async (
+    url: string, 
+    body: any, 
+    { onContent, onTokenUsage }: SSECallbacks = {}
+  ) => {
     const response = await fetch(`${apiBaseURL}${url}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -22,6 +31,10 @@ export function useSSEStream() {
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null')
     }
 
     const reader = response.body.getReader()
@@ -50,7 +63,7 @@ export function useSSEStream() {
         }
       }
     }
-  }
+  }, [apiBaseURL])
 
   return { fetchSSE }
 }

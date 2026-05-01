@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { 
-  Operation, MagicStick, RefreshLeft, Play, 
+  GitCompare, Wand2, RefreshLeft, Play, 
   Terminal, Zap, Check, AlertCircle, Loader2, Activity 
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -213,7 +213,7 @@ const PromptComparison: React.FC = () => {
           <div className="flex items-center justify-between px-2 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 neo-concave rounded-xl flex items-center justify-center text-foreground/30">
-                <MagicStick size={14} />
+                <Wand2 size={14} />
               </div>
               <span className="text-[10px] font-black tracking-widest text-foreground/40 uppercase">Variable Injection (JSON)</span>
             </div>

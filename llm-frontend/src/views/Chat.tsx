@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Settings, Trash2, Send, Loader2 } from 'lucide-react'
+import { Settings, Trash2, Send, Loader2, MessageSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { promptTestAPI } from '@/api'
 import { useMarkdown } from '@/hooks/useMarkdown'
@@ -110,14 +110,14 @@ const Chat: React.FC = () => {
     <div className="flex flex-col h-full max-w-5xl mx-auto space-y-6">
       
       {/* 1. 顶部配置区域 */}
-      <header className="p-6 neo-convex rounded-3xl flex flex-wrap items-center gap-6">
+      <header className="px-6 py-4 app-header rounded-3xl flex flex-wrap items-center gap-6 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 neo-concave rounded-2xl flex items-center justify-center text-primary">
-            <Settings size={20} />
+          <div className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-muted-foreground">
+            <Settings size={18} />
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">当前配置</p>
-            <p className="text-sm font-semibold truncate">{config.model || '加载中...'} / {config.provider}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Active Configuration</p>
+            <p className="text-sm font-bold text-foreground truncate">{config.model || '加载中...'} / {config.provider}</p>
           </div>
         </div>
         
@@ -126,15 +126,15 @@ const Chat: React.FC = () => {
         <div className="flex items-center gap-2">
           <button 
             onClick={() => setShowRawText(!showRawText)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              showRawText ? 'neo-concave text-primary' : 'neo-convex text-foreground/60'
+            className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all border ${
+              showRawText ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-muted/50 border-border text-muted-foreground hover:bg-muted'
             }`}
           >
             RAW 模式
           </button>
           <button 
             onClick={() => setMessages([])}
-            className="p-2 rounded-xl neo-convex text-red-500/60 hover:text-red-500 transition-all active:scale-95"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted/50 border border-border text-muted-foreground hover:text-red-500 hover:bg-red-500/5 hover:border-red-500/20 transition-all active:scale-95"
           >
             <Trash2 size={18} />
           </button>
@@ -144,68 +144,72 @@ const Chat: React.FC = () => {
       {/* 2. 聊天记录流 */}
       <div 
         ref={messageListRef}
-        className="flex-1 overflow-y-auto pr-4 space-y-8 scroll-smooth no-scrollbar"
+        className="flex-1 overflow-y-auto px-2 space-y-10 scroll-smooth no-scrollbar"
       >
         <AnimatePresence initial={false}>
-          {messages.map((msg, index) => (
-            <motion.div 
-              key={index}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className="max-w-[85%] group relative">
-                {/* 消息头部 */}
-                <div className={`flex items-center gap-2 mb-2 px-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <span className="text-[10px] font-black uppercase tracking-tighter opacity-30">
-                    {msg.role === 'user' ? 'YOU' : 'AI ASSISTANT'}
-                  </span>
-                </div>
-
-                {/* 消息内容 */}
-                <div 
-                  className={`p-5 rounded-[2rem] text-sm leading-relaxed ${
-                    msg.role === 'user' 
-                      ? 'bg-primary text-white shadow-xl shadow-primary/20 rounded-tr-sm' 
-                      : 'neo-convex border border-white/40 text-foreground/80 rounded-tl-sm'
-                  }`}
-                >
-                  {showRawText ? (
-                    <div className="whitespace-pre-wrap font-mono">{msg.content}</div>
-                  ) : (
-                    <article 
-                      className="markdown-rendered prose prose-slate dark:prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
-                    />
-                  )}
-                </div>
-
-                {/* Token 使用统计 */}
-                {msg.tokenUsage && (
-                  <div className="mt-2 px-4 py-1 inline-block neo-concave rounded-full text-[9px] font-bold text-foreground/40">
-                    ⚡ {msg.tokenUsage.totalTokens} Tokens
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center opacity-20 pointer-events-none py-20">
+              <MessageSquare size={80} strokeWidth={1} className="mb-6" />
+              <p className="font-bold tracking-[0.4em] uppercase text-sm">Waiting for Spark</p>
+            </div>
+          ) : (
+            messages.map((msg, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`max-w-[85%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  {/* 消息内容 */}
+                  <div 
+                    className={`p-6 text-sm leading-relaxed transition-all ${
+                      msg.role === 'user' 
+                        ? 'bg-primary text-primary-foreground font-medium rounded-3xl rounded-tr-sm shadow-sm' 
+                        : 'app-surface text-foreground rounded-3xl rounded-tl-sm'
+                    }`}
+                  >
+                    {showRawText ? (
+                      <div className="whitespace-pre-wrap font-mono text-xs">{msg.content}</div>
+                    ) : (
+                      <article 
+                        className="markdown-rendered prose prose-slate dark:prose-invert max-w-none prose-sm"
+                        dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
+                      />
+                    )}
                   </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
+
+                  {/* 消息底部状态 */}
+                  <div className={`flex items-center gap-3 mt-2 px-2 transition-opacity ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    {msg.tokenUsage && (
+                      <span className="text-[9px] font-bold text-muted-foreground/40 tracking-tight">
+                        {msg.tokenUsage.totalTokens} tokens
+                      </span>
+                    )}
+                    <span className="text-[9px] font-bold text-muted-foreground/20 uppercase tracking-widest">
+                      {msg.role === 'user' ? 'You' : 'Assistant'}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
         </AnimatePresence>
         
         {/* 加载状态 */}
         {loading && (
           <div className="flex justify-start">
-            <div className="neo-convex p-4 rounded-full flex gap-1">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+            <div className="app-surface px-4 py-3 rounded-2xl flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin text-primary" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Thought in progress...</span>
             </div>
           </div>
         )}
       </div>
 
       {/* 3. 底部输入框 */}
-      <footer className="p-4">
-        <div className="relative neo-concave rounded-[2.5rem] p-2 flex items-center gap-2 group transition-all focus-within:ring-2 ring-primary/20">
+      <footer className="relative pb-6 px-1">
+        <div className="app-input flex items-center gap-2 focus-within:ring-4 ring-primary/5 transition-all">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -216,7 +220,7 @@ const Chat: React.FC = () => {
               }
             }}
             placeholder="输入消息，开启灵感对话..."
-            className="flex-1 bg-transparent border-none focus:outline-none px-6 py-4 text-sm resize-none max-h-32 placeholder:text-foreground/20"
+            className="flex-1 bg-transparent border-none focus:outline-none px-4 py-2 text-sm resize-none max-h-48 placeholder:text-muted-foreground/40 no-scrollbar"
             rows={1}
           ></textarea>
           
@@ -224,14 +228,16 @@ const Chat: React.FC = () => {
             onClick={handleSend}
             disabled={!input.trim() || loading}
             className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${
-              input.trim() && !loading ? 'bg-primary text-white shadow-lg active:scale-90' : 'text-foreground/20 cursor-not-allowed'
+              input.trim() && !loading ? 'app-btn-primary shadow-lg shadow-primary/20 active:scale-90' : 'bg-muted text-muted-foreground/40 cursor-not-allowed'
             }`}
           >
-            <Send size={20} />
+            <Send size={18} />
           </button>
         </div>
+        <p className="text-center text-[9px] font-medium text-muted-foreground/30 mt-4 uppercase tracking-[0.2em]">
+          AI may generate inaccurate information. Please verify important details.
+        </p>
       </footer>
-
     </div>
   )
 }

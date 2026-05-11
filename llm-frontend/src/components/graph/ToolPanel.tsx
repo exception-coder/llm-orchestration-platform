@@ -20,6 +20,7 @@ const toolTypeColors: Record<string, string> = {
 
 const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose }) => {
   const formatSchema = (schema: any) => {
+    if (!schema) return ''
     if (typeof schema === 'object') return JSON.stringify(schema, null, 2)
     try {
       return JSON.stringify(JSON.parse(schema), null, 2)
@@ -52,7 +53,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose })
             <div className="p-6 space-y-6 h-full overflow-y-auto no-scrollbar relative">
               <button 
                 onClick={onClose}
-                className="absolute top-6 right-6 p-2 neo-convex rounded-full text-foreground/40 hover:text-primary transition-all"
+                className="absolute top-6 right-6 p-2 app-surface rounded-full text-foreground/40 hover:text-primary transition-all"
               >
                 <X size={18} />
               </button>
@@ -60,7 +61,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose })
               {/* Agent 信息头 */}
               <div className="pt-8">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 neo-concave rounded-xl flex items-center justify-center text-primary">
+                  <div className="w-10 h-10 app-recess rounded-xl flex items-center justify-center text-primary">
                     <Bot size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -70,16 +71,16 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose })
                 </div>
                 <p className="text-xs text-foreground/50 mb-3">{agent?.description || '暂无描述'}</p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-2 py-1 neo-concave rounded-lg text-[10px] font-bold text-foreground/50">
+                  <span className="px-2 py-1 app-recess rounded-lg text-[10px] font-bold text-foreground/50">
                     {agent?.llmProvider || 'N/A'}
                   </span>
-                  <span className="px-2 py-1 neo-concave rounded-lg text-[10px] font-mono font-bold text-primary/70">
+                  <span className="px-2 py-1 app-recess rounded-lg text-[10px] font-mono font-bold text-primary/70">
                     {agent?.llmModel || 'N/A'}
                   </span>
-                  <span className="px-2 py-1 neo-concave rounded-lg text-[10px] font-bold text-foreground/40">
+                  <span className="px-2 py-1 app-recess rounded-lg text-[10px] font-bold text-foreground/40">
                     Max {agent?.maxIterations || 10} iters
                   </span>
-                  <span className="px-2 py-1 neo-concave rounded-lg text-[10px] font-bold text-foreground/40">
+                  <span className="px-2 py-1 app-recess rounded-lg text-[10px] font-bold text-foreground/40">
                     Timeout {agent?.timeoutSeconds || 120}s
                   </span>
                 </div>
@@ -92,7 +93,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose })
                 </p>
 
                 {tools.length === 0 ? (
-                  <div className="neo-concave rounded-2xl p-6 text-center">
+                  <div className="app-recess rounded-2xl p-6 text-center">
                     <Wrench size={24} className="mx-auto mb-2 text-foreground/20" />
                     <p className="text-xs text-foreground/40">暂无绑定的 Tool</p>
                   </div>
@@ -101,7 +102,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose })
                     {tools.map((tool) => (
                       <div
                         key={tool.id}
-                        className="neo-concave rounded-2xl p-4 space-y-2"
+                        className="app-recess rounded-2xl p-4 space-y-2"
                       >
                         <div className="flex items-center justify-between">
                           <p className="font-bold text-sm">{tool.name}</p>
@@ -121,7 +122,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose })
                             <summary className="text-[10px] font-bold text-primary/60 cursor-pointer select-none">
                               INPUT SCHEMA
                             </summary>
-                            <pre className="mt-2 p-3 neo-concave rounded-xl text-[10px] font-mono text-foreground/60 overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">
+                            <pre className="mt-2 p-3 app-recess rounded-xl text-[10px] font-mono text-foreground/60 overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">
                               {formatSchema(tool.inputSchema)}
                             </pre>
                           </details>
@@ -129,7 +130,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ agent, tools, visible, onClose })
 
                         <div className="flex items-center gap-2 pt-1">
                           {tool.isAsync && (
-                            <span className="px-1.5 py-0.5 neo-concave rounded text-[9px] font-bold text-orange-500/60">
+                            <span className="px-1.5 py-0.5 app-recess rounded text-[9px] font-bold text-orange-500/60">
                               ASYNC
                             </span>
                           )}

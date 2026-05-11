@@ -59,7 +59,7 @@ const MarkdownToImage: React.FC = () => {
       {/* 1. 输入控制区 */}
       <aside className="w-full xl:w-96 flex flex-col shrink-0 gap-8">
         {/* 模板选择器 */}
-        <section className="neo-convex p-6 rounded-[2.5rem] space-y-4">
+        <section className="app-surface p-6 rounded-[2.5rem] space-y-4">
           <div className="flex items-center gap-2 px-2 mb-2">
             <Palette size={14} className="text-primary" />
             <span className="text-[10px] font-black tracking-widest text-foreground/40 uppercase">Select Style</span>
@@ -70,7 +70,7 @@ const MarkdownToImage: React.FC = () => {
                 key={t.id}
                 onClick={() => setCurrentTemplate(t.id)}
                 className={`py-3 px-2 rounded-xl text-[10px] font-bold transition-all flex flex-col items-center gap-2 ${
-                  currentTemplate === t.id ? 'neo-concave text-primary' : 'neo-convex text-foreground/40'
+                  currentTemplate === t.id ? 'app-recess text-primary' : 'app-surface text-foreground/40'
                 }`}
               >
                 <div className={`w-4 h-4 rounded-full shadow-sm ${t.color}`}></div>
@@ -81,7 +81,7 @@ const MarkdownToImage: React.FC = () => {
         </section>
 
         {/* 内容输入槽 */}
-        <section className="flex-1 neo-convex p-6 rounded-[3rem] flex flex-col min-h-[400px]">
+        <section className="flex-1 app-surface p-6 rounded-[3rem] flex flex-col min-h-[400px]">
           <div className="flex items-center justify-between mb-4 px-2">
             <div className="flex items-center gap-2">
               <Type size={14} className="text-foreground/30" />
@@ -89,7 +89,7 @@ const MarkdownToImage: React.FC = () => {
             </div>
             <button onClick={() => setMarkdownInput('')} className="text-[10px] font-bold text-red-500/40 hover:text-red-500">CLEAR</button>
           </div>
-          <div className="flex-1 neo-concave rounded-[2rem] p-4">
+          <div className="flex-1 app-recess rounded-[2rem] p-4">
             <textarea 
               value={markdownInput}
               onChange={(e) => setMarkdownInput(e.target.value)}
@@ -103,7 +103,7 @@ const MarkdownToImage: React.FC = () => {
         <button 
           onClick={exportImage}
           disabled={!markdownInput.trim() || exporting}
-          className="h-20 neo-convex rounded-[2rem] flex items-center justify-center gap-4 text-primary font-black tracking-[0.2em] active:scale-95 transition-all shadow-xl disabled:opacity-50"
+          className="h-20 app-surface rounded-[2rem] flex items-center justify-center gap-4 text-primary font-black tracking-[0.2em] active:scale-95 transition-all shadow-xl disabled:opacity-50"
         >
           {!exporting ? <Download size={24} /> : <Loader2 size={24} className="animate-spin" />}
           <span>{exporting ? 'PRINTING...' : 'EXPORT IMAGE'}</span>
@@ -114,7 +114,7 @@ const MarkdownToImage: React.FC = () => {
       <main className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center justify-between mb-6 px-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 neo-convex rounded-2xl flex items-center justify-center text-primary">
+            <div className="w-10 h-10 app-surface rounded-2xl flex items-center justify-center text-primary">
               <Eye size={20} />
             </div>
             <span className="text-[10px] font-black tracking-[0.3em] text-foreground/30 uppercase">Live Output Preview</span>
@@ -122,7 +122,7 @@ const MarkdownToImage: React.FC = () => {
         </div>
 
         {/* 预览容器 */}
-        <div className="flex-1 neo-concave rounded-[4rem] p-10 overflow-y-auto relative bg-foreground/[0.02] no-scrollbar">
+        <div className="flex-1 app-recess rounded-[4rem] p-10 overflow-y-auto relative bg-foreground/[0.02] no-scrollbar">
           <div 
             ref={previewRef}
             className={`mx-auto shadow-2xl transition-all duration-500 max-w-2xl ${getTemplateClass(currentTemplate)}`}

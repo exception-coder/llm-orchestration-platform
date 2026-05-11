@@ -123,21 +123,21 @@ const TemplateManagement: React.FC = () => {
       <aside className={`w-full lg:w-96 flex flex-col shrink-0 transition-all ${isMobile && (selectedTemplate || isCreating) ? 'hidden' : 'flex'}`}>
         <div className="flex items-center justify-between px-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 neo-convex rounded-xl flex items-center justify-center text-primary">
+            <div className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-primary">
               <Tag size={20} />
             </div>
             <h2 className="font-black tracking-tight text-lg">模板库</h2>
           </div>
           <button 
             onClick={handleCreate}
-            className="w-10 h-10 neo-convex rounded-xl flex items-center justify-center text-primary active:scale-90 transition-all"
+            className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-primary active:scale-90 transition-all"
           >
             <Plus size={20} />
           </button>
         </div>
 
         <div className="px-4 mb-6">
-          <div className="neo-concave rounded-2xl flex items-center gap-3 px-4 py-3 group focus-within:ring-2 ring-primary/20 transition-all">
+          <div className="app-recess rounded-2xl flex items-center gap-3 px-4 py-3 group focus-within:ring-2 ring-primary/20 transition-all">
             <Search size={16} className="text-foreground/20" />
             <input 
               value={searchText}
@@ -148,13 +148,13 @@ const TemplateManagement: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex-1 neo-concave rounded-[3rem] p-4 overflow-y-auto no-scrollbar space-y-3">
+        <div className="flex-1 app-recess rounded-[3rem] p-4 overflow-y-auto no-scrollbar space-y-3">
           {filteredTemplates.map((t) => (
             <div 
               key={t.templateName}
               onClick={() => handleSelectTemplate(t)}
               className={`p-5 rounded-[2rem] cursor-pointer transition-all flex items-center justify-between group ${
-                selectedTemplate?.templateName === t.templateName ? 'neo-convex text-primary z-10' : 'hover:bg-foreground/5 text-foreground/60'
+                selectedTemplate?.templateName === t.templateName ? 'app-surface text-primary z-10' : 'hover:bg-foreground/5 text-foreground/60'
               }`}
             >
               <div className="flex-1 min-w-0 pr-4">
@@ -165,7 +165,7 @@ const TemplateManagement: React.FC = () => {
               </div>
               <button 
                 onClick={(e) => { e.stopPropagation(); handleDelete(t); }}
-                className="p-2 rounded-xl neo-convex text-red-500/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                className="p-2 rounded-xl app-surface text-red-500/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
               >
                 <Trash2 size={14} />
               </button>
@@ -188,8 +188,8 @@ const TemplateManagement: React.FC = () => {
               key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex items-center justify-center"
             >
-              <div className="neo-convex p-16 rounded-[4rem] text-center space-y-6">
-                <div className="w-20 h-20 neo-concave rounded-[2rem] mx-auto flex items-center justify-center text-foreground/10">
+              <div className="app-surface p-16 rounded-[4rem] text-center space-y-6">
+                <div className="w-20 h-20 app-recess rounded-[2rem] mx-auto flex items-center justify-center text-foreground/10">
                   <Edit size={32} />
                 </div>
                 <p className="text-sm font-bold text-foreground/30 uppercase tracking-[0.3em]">SELECT A TEMPLATE</p>
@@ -198,11 +198,11 @@ const TemplateManagement: React.FC = () => {
           ) : (
             <motion.div 
               key="editor" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-              className="flex-1 flex flex-col neo-convex rounded-[4rem] overflow-hidden border border-white/40"
+              className="flex-1 flex flex-col app-surface rounded-[4rem] overflow-hidden border border-white/40"
             >
               <header className="h-20 flex items-center px-10 border-b border-foreground/5 bg-white/5 backdrop-blur-xl">
                 {isMobile && (
-                  <button onClick={() => setSelectedTemplate(null)} className="mr-4 w-8 h-8 neo-convex rounded-full flex items-center justify-center text-foreground/40 active:scale-90">
+                  <button onClick={() => setSelectedTemplate(null)} className="mr-4 w-8 h-8 app-surface rounded-full flex items-center justify-center text-foreground/40 active:scale-90">
                     <X size={16} />
                   </button>
                 )}
@@ -211,11 +211,11 @@ const TemplateManagement: React.FC = () => {
                 </h3>
                 <div className="flex items-center gap-3">
                   {!isEditing ? (
-                    <button onClick={() => setIsEditing(true)} className="px-6 py-2.5 neo-convex rounded-2xl text-primary text-[11px] font-black tracking-widest active:scale-95 transition-all">EDIT</button>
+                    <button onClick={() => setIsEditing(true)} className="px-6 py-2.5 app-surface rounded-2xl text-primary text-[11px] font-black tracking-widest active:scale-95 transition-all">EDIT</button>
                   ) : (
                     <>
-                      <button onClick={() => { setIsEditing(false); if (isCreating) setSelectedTemplate(null); }} className="px-6 py-2.5 neo-convex rounded-2xl text-foreground/40 text-[11px] font-black tracking-widest active:scale-95 transition-all">CANCEL</button>
-                      <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 neo-convex rounded-2xl text-primary text-[11px] font-black tracking-widest active:scale-95 transition-all shadow-lg disabled:opacity-50">
+                      <button onClick={() => { setIsEditing(false); if (isCreating) setSelectedTemplate(null); }} className="px-6 py-2.5 app-surface rounded-2xl text-foreground/40 text-[11px] font-black tracking-widest active:scale-95 transition-all">CANCEL</button>
+                      <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 app-surface rounded-2xl text-primary text-[11px] font-black tracking-widest active:scale-95 transition-all shadow-lg disabled:opacity-50">
                         {saving ? 'SAVING...' : 'SAVE'}
                       </button>
                     </>
@@ -227,7 +227,7 @@ const TemplateManagement: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black tracking-widest text-foreground/30 uppercase px-4">Identifier</label>
-                    <div className="neo-concave rounded-[1.5rem] p-1">
+                    <div className="app-recess rounded-[1.5rem] p-1">
                       <input 
                         value={editForm.templateName}
                         onChange={(e) => setEditForm({...editForm, templateName: e.target.value})}
@@ -239,7 +239,7 @@ const TemplateManagement: React.FC = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black tracking-widest text-foreground/30 uppercase px-4">Category</label>
-                    <div className="neo-concave rounded-[1.5rem] p-1">
+                    <div className="app-recess rounded-[1.5rem] p-1">
                       <select 
                         value={editForm.category}
                         onChange={(e) => setEditForm({...editForm, category: e.target.value})}
@@ -258,7 +258,7 @@ const TemplateManagement: React.FC = () => {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black tracking-widest text-foreground/30 uppercase px-4">Description</label>
-                  <div className="neo-concave rounded-[1.5rem] p-1">
+                  <div className="app-recess rounded-[1.5rem] p-1">
                     <textarea 
                       value={editForm.description}
                       onChange={(e) => setEditForm({...editForm, description: e.target.value})}
@@ -278,7 +278,7 @@ const TemplateManagement: React.FC = () => {
                       Use {'{variable}'} as placeholders
                     </div>
                   </div>
-                  <div className="neo-concave rounded-[2.5rem] p-1">
+                  <div className="app-recess rounded-[2.5rem] p-1">
                     <textarea 
                       value={editForm.templateContent}
                       onChange={(e) => setEditForm({...editForm, templateContent: e.target.value})}
@@ -299,7 +299,7 @@ const TemplateManagement: React.FC = () => {
                       </button>
                     )}
                   </div>
-                  <div className="neo-concave rounded-[2rem] p-1">
+                  <div className="app-recess rounded-[2rem] p-1">
                     <textarea 
                       value={editForm.variableExamples}
                       onChange={(e) => setEditForm({...editForm, variableExamples: e.target.value})}

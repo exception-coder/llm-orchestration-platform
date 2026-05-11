@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { 
   Sparkles, FileText, CheckCircle, Copy, Loader2,
-  Instagram, Twitter, Send, Github, Languages
+  Image, AtSign, Send, Code2, Languages
 } from 'lucide-react'
 import { contentOptimizationAPI } from '@/api'
 import { useMarkdown } from '@/hooks/useMarkdown'
@@ -15,10 +15,10 @@ const ContentOptimization: React.FC = () => {
   const [currentPlatform, setCurrentPlatform] = useState('')
 
   const platforms = [
-    { id: 'RED', label: '小红书', icon: Instagram },
+    { id: 'RED', label: '小红书', icon: Image },
     { id: 'TIKTOK', label: '抖音/TikTok', icon: Send },
-    { id: 'TWITTER', label: 'Twitter/X', icon: Twitter },
-    { id: 'GITHUB', label: 'GitHub Readme', icon: Github },
+    { id: 'TWITTER', label: 'Twitter/X', icon: AtSign },
+    { id: 'GITHUB', label: 'GitHub Readme', icon: Code2 },
     { id: 'TRANSLATE', label: '智能润色/翻译', icon: Languages }
   ]
 
@@ -52,7 +52,7 @@ const ContentOptimization: React.FC = () => {
       
       {/* 头部：加工厂状态 */}
       <header className="flex items-center gap-6 px-4">
-        <div className="w-14 h-14 neo-convex rounded-2xl flex items-center justify-center text-primary shadow-lg">
+        <div className="w-14 h-14 app-surface rounded-2xl flex items-center justify-center text-primary shadow-lg">
           <Sparkles size={28} />
         </div>
         <div>
@@ -64,15 +64,15 @@ const ContentOptimization: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-stretch">
         
         {/* 原文输入 (Input Slot) - 占据 5 列 */}
-        <section className="xl:col-span-5 flex flex-col neo-convex rounded-[3.5rem] p-8 border border-white/40">
+        <section className="xl:col-span-5 flex flex-col app-surface rounded-[3.5rem] p-8 border border-white/40">
           <div className="flex items-center gap-3 mb-6 px-2">
-            <div className="w-8 h-8 neo-concave rounded-xl flex items-center justify-center text-foreground/40">
+            <div className="w-8 h-8 app-recess rounded-xl flex items-center justify-center text-foreground/40">
               <FileText size={16} />
             </div>
             <span className="text-[10px] font-black tracking-widest opacity-40 uppercase">Source Content</span>
           </div>
           
-          <div className="flex-1 neo-concave rounded-[2.5rem] p-6 min-h-[400px]">
+          <div className="flex-1 app-recess rounded-[2.5rem] p-6 min-h-[400px]">
             <textarea 
               value={sourceContent}
               onChange={(e) => setSourceContent(e.target.value)}
@@ -95,7 +95,7 @@ const ContentOptimization: React.FC = () => {
                 key={p.id}
                 onClick={() => optimize(p.id)}
                 disabled={loading}
-                className={`group relative h-20 neo-convex rounded-[2rem] flex flex-col items-center justify-center gap-2 transition-all active:scale-90 ${
+                className={`group relative h-20 app-surface rounded-[2rem] flex flex-col items-center justify-center gap-2 transition-all active:scale-90 ${
                   loading ? 'opacity-50 grayscale' : 'hover:text-primary'
                 }`}
               >
@@ -112,23 +112,23 @@ const ContentOptimization: React.FC = () => {
         </section>
 
         {/* 优化成品 (Output Slot) - 占据 5 列 */}
-        <section className="xl:col-span-5 flex flex-col neo-convex rounded-[3.5rem] p-8 border border-white/40">
+        <section className="xl:col-span-5 flex flex-col app-surface rounded-[3.5rem] p-8 border border-white/40">
           <div className="flex items-center justify-between mb-6 px-2">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 neo-concave rounded-xl flex items-center justify-center text-primary">
+              <div className="w-8 h-8 app-recess rounded-xl flex items-center justify-center text-primary">
                 <CheckCircle size={16} />
               </div>
               <span className="text-[10px] font-black tracking-widest opacity-40 uppercase">Optimized Result</span>
             </div>
             <button 
               onClick={handleCopy}
-              className="p-2 neo-convex rounded-xl text-foreground/30 hover:text-primary transition-colors"
+              className="p-2 app-surface rounded-xl text-foreground/30 hover:text-primary transition-colors"
             >
               <Copy size={16} />
             </button>
           </div>
 
-          <div className="flex-1 neo-concave rounded-[2.5rem] p-8 overflow-y-auto relative min-h-[400px]">
+          <div className="flex-1 app-recess rounded-[2.5rem] p-8 overflow-y-auto relative min-h-[400px]">
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-[2.5rem] z-20">
                 <div className="flex flex-col items-center gap-4">

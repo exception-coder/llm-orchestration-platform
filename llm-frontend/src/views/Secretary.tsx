@@ -72,8 +72,8 @@ const Secretary: React.FC = () => {
       {/* 左侧：助理状态与记忆 */}
       <aside className="w-full lg:w-72 flex flex-col shrink-0 gap-8">
         {/* 助理身份卡 */}
-        <div className="neo-convex p-8 rounded-[3rem] text-center space-y-4">
-          <div className="w-24 h-24 neo-concave rounded-[2.5rem] mx-auto p-1 overflow-hidden">
+        <div className="app-surface p-8 rounded-[3rem] text-center space-y-4">
+          <div className="w-24 h-24 app-recess rounded-[2.5rem] mx-auto p-1 overflow-hidden">
             <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Secretary" alt="AI Avatar" className="w-full h-full" />
           </div>
           <div>
@@ -83,14 +83,14 @@ const Secretary: React.FC = () => {
         </div>
 
         {/* 记忆插槽 */}
-        <div className="flex-1 neo-concave rounded-[3rem] p-6 space-y-6 overflow-y-auto no-scrollbar">
+        <div className="flex-1 app-recess rounded-[3rem] p-6 space-y-6 overflow-y-auto no-scrollbar">
           <div className="flex items-center justify-between px-2">
             <span className="text-[9px] font-black text-foreground/30 tracking-widest uppercase">Memory Clusters</span>
             <Plus size={12} className="cursor-pointer hover:text-primary transition-colors" />
           </div>
           
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="neo-convex p-4 rounded-2xl space-y-2 group cursor-pointer active:scale-95 transition-all">
+            <div key={i} className="app-surface p-4 rounded-2xl space-y-2 group cursor-pointer active:scale-95 transition-all">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-primary/40 group-hover:bg-primary transition-colors"></div>
                 <span className="text-[10px] font-bold opacity-60">Session #{1024 + i}</span>
@@ -102,7 +102,7 @@ const Secretary: React.FC = () => {
       </aside>
 
       {/* 右侧：主协作区 */}
-      <main className="flex-1 flex flex-col min-w-0 neo-convex rounded-[4rem] overflow-hidden border border-white/40 shadow-2xl">
+      <main className="flex-1 flex flex-col min-w-0 app-surface rounded-[4rem] overflow-hidden border border-white/40 shadow-2xl">
         {/* 顶栏：连接状态 */}
         <header className="h-20 flex items-center px-10 border-b border-foreground/5 bg-white/5 backdrop-blur-xl">
           <div className="flex items-center gap-4">
@@ -110,7 +110,7 @@ const Secretary: React.FC = () => {
             <span className="text-xs font-bold tracking-widest opacity-60 uppercase">Encrypted Collaboration Channel</span>
           </div>
           <div className="flex-1"></div>
-          <button className="w-10 h-10 neo-convex rounded-full flex items-center justify-center text-foreground/30 hover:text-red-500 transition-colors">
+          <button className="w-10 h-10 app-surface rounded-full flex items-center justify-center text-foreground/30 hover:text-red-500 transition-colors">
             <Power size={18} />
           </button>
         </header>
@@ -127,7 +127,7 @@ const Secretary: React.FC = () => {
               >
                 <div 
                   className={`max-w-[80%] p-6 rounded-[2.5rem] ${
-                    msg.role === 'user' ? 'bg-primary text-white shadow-xl rounded-tr-sm' : 'neo-concave text-foreground/80 rounded-tl-sm'
+                    msg.role === 'user' ? 'bg-primary text-white shadow-xl rounded-tr-sm' : 'app-recess text-foreground/80 rounded-tl-sm'
                   }`}
                 >
                   <article 
@@ -141,7 +141,7 @@ const Secretary: React.FC = () => {
           
           {loading && (
             <div className="flex justify-start">
-              <div className="neo-concave px-6 py-3 rounded-full flex items-center gap-3">
+              <div className="app-recess px-6 py-3 rounded-full flex items-center gap-3">
                 <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce"></div>
                 <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                 <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -152,8 +152,8 @@ const Secretary: React.FC = () => {
 
         {/* 输入槽 */}
         <footer className="p-8">
-          <div className="neo-concave rounded-[3rem] p-2 flex items-center gap-3 group focus-within:ring-2 ring-primary/20 transition-all">
-            <div className="w-12 h-12 neo-convex rounded-full flex items-center justify-center text-foreground/20 group-focus-within:text-primary transition-colors">
+          <div className="app-recess rounded-[3rem] p-2 flex items-center gap-3 group focus-within:ring-2 ring-primary/20 transition-all">
+            <div className="w-12 h-12 app-surface rounded-full flex items-center justify-center text-foreground/20 group-focus-within:text-primary transition-colors">
               <Mic size={20} />
             </div>
             <input 
@@ -166,7 +166,7 @@ const Secretary: React.FC = () => {
             <button 
               onClick={handleSend}
               disabled={!input.trim() || loading}
-              className={`w-14 h-14 neo-convex rounded-[1.8rem] flex items-center justify-center transition-all ${
+              className={`w-14 h-14 app-surface rounded-[1.8rem] flex items-center justify-center transition-all ${
                 input.trim() && !loading ? 'text-primary active:scale-90 shadow-lg' : 'text-foreground/10'
               }`}
             >

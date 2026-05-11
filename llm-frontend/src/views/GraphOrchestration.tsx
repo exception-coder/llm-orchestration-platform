@@ -97,7 +97,7 @@ const GraphOrchestration: React.FC = () => {
       {/* 顶部 */}
       <header className="flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 neo-convex rounded-2xl flex items-center justify-center text-primary shadow-lg">
+          <div className="w-12 h-12 app-surface rounded-2xl flex items-center justify-center text-primary shadow-lg">
             <GitBranch size={24} />
           </div>
           <div>
@@ -107,7 +107,7 @@ const GraphOrchestration: React.FC = () => {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-3 px-6 py-3 neo-convex rounded-2xl text-primary font-bold active:scale-95 transition-all"
+          className="flex items-center gap-3 px-6 py-3 app-surface rounded-2xl text-primary font-bold active:scale-95 transition-all"
         >
           <Plus size={18} />
           <span>新建编排</span>
@@ -124,11 +124,11 @@ const GraphOrchestration: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="neo-convex p-8 rounded-[2rem] transition-all hover:scale-[1.01]"
+              className="app-surface p-8 rounded-[2rem] transition-all hover:scale-[1.01]"
             >
               <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 neo-concave rounded-xl flex items-center justify-center text-primary">
+                  <div className="w-10 h-10 app-recess rounded-xl flex items-center justify-center text-primary">
                     <Workflow size={20} />
                   </div>
                   <div>
@@ -139,25 +139,25 @@ const GraphOrchestration: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => viewVisual(graph)}
-                    className="px-4 py-2 neo-convex rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
+                    className="px-4 py-2 app-surface rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
                   >
                     VISUAL
                   </button>
                   <button
                     onClick={() => viewCallChain(graph)}
-                    className="px-4 py-2 neo-convex rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
+                    className="px-4 py-2 app-surface rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
                   >
                     CHAIN
                   </button>
                   <button
                     onClick={() => editGraph(graph)}
-                    className="px-4 py-2 neo-convex rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
+                    className="px-4 py-2 app-surface rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
                   >
                     EDIT
                   </button>
                   <button
                     onClick={() => deleteGraph(graph.id)}
-                    className="w-10 h-10 neo-convex rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-90 transition-all"
+                    className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-90 transition-all"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -168,15 +168,15 @@ const GraphOrchestration: React.FC = () => {
 
               {/* 节点与边概览 */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="neo-concave rounded-2xl p-4 text-center">
+                <div className="app-recess rounded-2xl p-4 text-center">
                   <p className="text-2xl font-black text-primary">{graph.nodes?.length || 0}</p>
                   <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest mt-1">Nodes</p>
                 </div>
-                <div className="neo-concave rounded-2xl p-4 text-center">
+                <div className="app-recess rounded-2xl p-4 text-center">
                   <p className="text-2xl font-black text-primary">{graph.edges?.length || 0}</p>
                   <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest mt-1">Edges</p>
                 </div>
-                <div className="neo-concave rounded-2xl p-4 text-center">
+                <div className="app-recess rounded-2xl p-4 text-center">
                   <p className="text-sm font-mono font-bold text-foreground/60 truncate">{graph.entryNodeId || '-'}</p>
                   <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest mt-1">Entry Node</p>
                 </div>
@@ -190,7 +190,7 @@ const GraphOrchestration: React.FC = () => {
                     {graphAgents[graph.id].map((a) => (
                       <span
                         key={a.id}
-                        className="px-3 py-1 neo-concave rounded-xl text-[11px] font-bold text-foreground/60"
+                        className="px-3 py-1 app-recess rounded-xl text-[11px] font-bold text-foreground/60"
                       >{a.name}</span>
                     ))}
                   </div>
@@ -220,19 +220,19 @@ const GraphOrchestration: React.FC = () => {
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-              className="relative w-full max-w-lg neo-convex rounded-[3rem] p-8 overflow-hidden bg-background"
+              className="relative w-full max-w-lg app-surface rounded-[3rem] p-8 overflow-hidden bg-background"
             >
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-black tracking-tight">执行调用链</h2>
-                <button onClick={() => setChainDialogVisible(false)} className="p-2 neo-convex rounded-full text-foreground/20 hover:text-primary transition-all">
+                <button onClick={() => setChainDialogVisible(false)} className="p-2 app-surface rounded-full text-foreground/20 hover:text-primary transition-all">
                   <X size={18} />
                 </button>
               </div>
               
               <div className="space-y-4 max-h-[60vh] overflow-y-auto no-scrollbar">
                 {callChain.length > 0 ? callChain.map((step, idx) => (
-                  <div key={idx} className="flex items-center gap-4 neo-concave rounded-2xl p-5 group hover:ring-1 ring-primary/20 transition-all">
-                    <div className="w-10 h-10 neo-convex rounded-xl flex items-center justify-center text-primary font-black text-sm shrink-0">
+                  <div key={idx} className="flex items-center gap-4 app-recess rounded-2xl p-5 group hover:ring-1 ring-primary/20 transition-all">
+                    <div className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-primary font-black text-sm shrink-0">
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -261,11 +261,11 @@ const GraphOrchestration: React.FC = () => {
             />
             <motion.div 
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-lg neo-convex rounded-[3rem] p-10 overflow-hidden bg-background"
+              className="relative w-full max-w-lg app-surface rounded-[3rem] p-10 overflow-hidden bg-background"
             >
               <div className="flex items-center justify-between mb-10">
                 <h2 className="text-2xl font-black tracking-tighter italic uppercase">{isEdit ? 'Update Graph' : 'New Orchestration'}</h2>
-                <button onClick={() => setDialogVisible(false)} className="p-2 neo-convex rounded-full text-foreground/20 hover:text-primary transition-all">
+                <button onClick={() => setDialogVisible(false)} className="p-2 app-surface rounded-full text-foreground/20 hover:text-primary transition-all">
                   <X size={18} />
                 </button>
               </div>
@@ -274,7 +274,7 @@ const GraphOrchestration: React.FC = () => {
                 {!isEdit && (
                   <div className="space-y-2">
                     <label className="text-[10px] font-black tracking-widest text-foreground/30 uppercase px-2">Identification ID</label>
-                    <div className="neo-concave rounded-2xl p-1">
+                    <div className="app-recess rounded-2xl p-1">
                       <input 
                         value={form.id} 
                         onChange={(e) => setForm({ ...form, id: e.target.value })}
@@ -287,7 +287,7 @@ const GraphOrchestration: React.FC = () => {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black tracking-widest text-foreground/30 uppercase px-2">Display Name</label>
-                  <div className="neo-concave rounded-2xl p-1">
+                  <div className="app-recess rounded-2xl p-1">
                     <input 
                       value={form.name} 
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -299,7 +299,7 @@ const GraphOrchestration: React.FC = () => {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black tracking-widest text-foreground/30 uppercase px-2">Orchestration Description</label>
-                  <div className="neo-concave rounded-[2rem] p-1">
+                  <div className="app-recess rounded-[2rem] p-1">
                     <textarea 
                       value={form.description} 
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -311,7 +311,7 @@ const GraphOrchestration: React.FC = () => {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black tracking-widest text-foreground/30 uppercase px-2">Entry Node Reference</label>
-                  <div className="neo-concave rounded-2xl p-1">
+                  <div className="app-recess rounded-2xl p-1">
                     <input 
                       value={form.entryNodeId} 
                       onChange={(e) => setForm({ ...form, entryNodeId: e.target.value })}
@@ -324,14 +324,14 @@ const GraphOrchestration: React.FC = () => {
                 <div className="flex gap-4 pt-6">
                   <button 
                     onClick={() => setDialogVisible(false)}
-                    className="flex-1 h-14 neo-convex rounded-2xl text-[11px] font-black tracking-widest text-foreground/40 hover:text-foreground/60 transition-all"
+                    className="flex-1 h-14 app-surface rounded-2xl text-[11px] font-black tracking-widest text-foreground/40 hover:text-foreground/60 transition-all"
                   >
                     CANCEL
                   </button>
                   <button 
                     onClick={saveGraph}
                     disabled={saving}
-                    className="flex-1 h-14 neo-convex rounded-2xl text-[11px] font-black tracking-widest text-primary shadow-xl active:scale-95 transition-all disabled:opacity-50"
+                    className="flex-1 h-14 app-surface rounded-2xl text-[11px] font-black tracking-widest text-primary shadow-xl active:scale-95 transition-all disabled:opacity-50"
                   >
                     {saving ? 'SAVING...' : 'CONFIRM SAVE'}
                   </button>

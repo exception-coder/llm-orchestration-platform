@@ -1,91 +1,342 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  
-  --radius-xl: 1.5rem;
-  --radius-2xl: 2rem;
-  --radius-3xl: 2.5rem;
-  --radius-4xl: 3rem;
+  --font-sans: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* 基础令牌 (默认拟物) */
-  --color-background: oklch(0.95 0.01 210);
-  --color-foreground: oklch(0.2 0.05 210);
-  --color-primary: oklch(0.6 0.2 250);
-  --color-card: oklch(0.95 0.01 210);
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-4xl: 2.5rem;
+
+  /* --- 核心令牌 (Modern Minimalist Default) --- */
+  --color-background: oklch(0.99 0.005 240);
+  --color-foreground: oklch(0.2 0.02 240);
+  --color-primary: oklch(0.6 0.18 250);
+  --color-primary-foreground: oklch(1 0 0);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.2 0.02 240);
+  --color-border: oklch(0.9 0.01 240 / 0.8);
+  --color-muted: oklch(0.96 0.01 240);
+  --color-muted-foreground: oklch(0.5 0.02 240);
+  --color-accent: oklch(0.94 0.03 250);
+  --color-accent-foreground: oklch(0.4 0.15 250);
+
+  /* --- 阴影系统 (Soft Elevation) --- */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
   
-  --shadow-neo-flat: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
-  --shadow-neo-inset: inset 2px 2px 5px #babecc, inset -5px -5px 10px #ffffff;
+  /* 兼容旧类名但改为现代样式 */
+  --shadow-neo-flat: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-neo-inset: inset 0 2px 4px 0 rgb(0 0 0 / 0.02);
 }
 
 /* ==========================================================================
    风格定义层 (Themes)
    ========================================================================== */
 
-/* 1. 苹果风格 (Apple Glass) - 极致模糊与空气感 */
+/* 1. AI 清透 (Clean AI Workspace) */
+:root[data-theme='ai-clean'] {
+  --color-background: #f6f8fb;
+  --color-foreground: #172033;
+  --color-primary: #2563eb;
+  --color-primary-foreground: #ffffff;
+  --color-card: rgba(255, 255, 255, 0.84);
+  --color-card-foreground: #172033;
+  --color-border: rgba(113, 128, 150, 0.18);
+  --color-muted: rgba(239, 244, 251, 0.82);
+  --color-muted-foreground: #68758a;
+  --color-accent: #e9f7f5;
+  --color-accent-foreground: #0f766e;
+  --radius-base: 18px;
+  --shadow-main: 0 18px 48px rgba(31, 41, 55, 0.08), 0 2px 8px rgba(31, 41, 55, 0.04);
+  --shadow-neo-inset: inset 0 1px 0 rgba(255, 255, 255, 0.78), inset 0 -1px 0 rgba(15, 23, 42, 0.03);
+  --sidebar-border: 1px solid rgba(113, 128, 150, 0.18);
+  --header-border: 1px solid rgba(113, 128, 150, 0.16);
+  --font-body: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* 2. 报刊杂志 (Editorial) */
+:root[data-theme='paper'] {
+  --color-background: #ffffff;
+  --color-card: #ffffff;
+  --color-border: #000000;
+  --color-muted: #f4f4f4;
+  --radius-base: 0px;
+  --shadow-main: none;
+  --sidebar-border: 1px solid #000;
+  --header-border: 1px solid #000;
+  --font-body: 'Georgia', serif;
+}
+
+/* 3. 怀旧经典 (Retro-Win95) */
+:root[data-theme='win95'] {
+  --color-background: #008080;
+  --color-card: #c0c0c0;
+  --color-foreground: #000000;
+  --color-primary: #000080;
+  --color-border: #808080;
+  --radius-base: 0px;
+  --shadow-main: none;
+  --sidebar-border: 2px solid;
+  --header-border: 2px solid;
+  --font-body: '"JetBrains Mono", monospace';
+}
+
+/* 4. 几何主义 (Bauhaus) */
+:root[data-theme='bauhaus'] {
+  --color-background: #e5e5e5;
+  --color-card: #ffffff;
+  --color-primary: #ff0000;
+  --color-accent: #0000ff;
+  --color-border: #000000;
+  --radius-base: 0px;
+  --shadow-main: 10px 10px 0px #000;
+  --sidebar-border: 4px solid #000;
+  --header-border: 4px solid #000;
+}
+
+/* 5. 未来主义 (Glass-Aurora) */
+:root[data-theme='aurora'] {
+  --color-background: #000000;
+  --color-card: rgba(255, 255, 255, 0.05);
+  --color-primary: #00f2fe;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --radius-base: 24px;
+  --shadow-main: 0 0 30px rgba(0, 242, 254, 0.1);
+}
+
+/* 6. 暗黑专业 (Dark Pro) */
+:root[data-theme='dark'] {
+  --color-background: oklch(0.12 0.01 240);
+  --color-foreground: oklch(0.98 0.01 240);
+  --color-card: oklch(0.16 0.01 240);
+  --color-border: oklch(0.25 0.01 240 / 0.5);
+  --color-muted: oklch(0.2 0.01 240);
+  --color-primary: oklch(0.6 0.2 250);
+  --shadow-main: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* 7. 苹果毛玻璃 (Apple Glass) */
 :root[data-theme='apple'] {
-  --color-background: oklch(0.98 0 0); 
-  --color-foreground: oklch(0.1 0 0);
-  --color-card: rgba(255, 255, 255, 0.7);
-  --shadow-neo-flat: 0 4px 24px -1px rgba(0, 0, 0, 0.06), 0 2px 8px -1px rgba(0, 0, 0, 0.04);
-  --shadow-neo-inset: 0 0 0 1px rgba(0, 0, 0, 0.05) inset;
-  --glass-blur: 24px;
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --color-background: oklch(0.98 0.005 240);
+  --color-card: rgba(255, 255, 255, 0.6);
+  --color-border: rgba(255, 255, 255, 0.4);
+  --color-muted: rgba(0, 0, 0, 0.03);
+  --radius-base: 20px;
+  --shadow-main: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
 }
 
-/* 2. 谷歌风格 (Material You) - 大圆角与柔和色调 */
-:root[data-theme='google'] {
-  --color-background: oklch(0.92 0.02 240); /* 柔和的浅紫/蓝 */
-  --color-foreground: oklch(0.2 0.05 240);
-  --color-primary: oklch(0.5 0.15 240);
-  --color-card: oklch(0.98 0.01 240);
-  --shadow-neo-flat: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-  --shadow-neo-inset: none;
-  --radius-xl: 2rem; /* MD3 的大圆角 */
-  --radius-2xl: 2.5rem;
-}
-
-/* 3. 赛博风格 (Cyber/Terminal) */
+/* 8. 赛博终端 (Cyber) */
 :root[data-theme='cyber'] {
-  --color-background: oklch(0.1 0 0);
-  --color-foreground: oklch(0.7 0.3 150); /* 荧光绿 */
-  --color-primary: oklch(0.7 0.3 150);
-  --color-card: oklch(0.15 0 0);
-  --shadow-neo-flat: 0 0 10px rgba(0, 255, 65, 0.2);
-  --shadow-neo-inset: inset 0 0 5px rgba(0, 255, 65, 0.1);
+  --color-background: #050505;
+  --color-foreground: #00ff41;
+  --color-primary: #00ff41;
+  --color-card: #0a0a0a;
+  --color-border: #00ff41;
+  --color-muted: #111;
+  --radius-base: 0px;
+  --shadow-main: 0 0 10px rgba(0, 255, 65, 0.2);
+  --font-body: '"JetBrains Mono", monospace';
 }
 
 /* ==========================================================================
-   物理材质映射 (Utilities)
+   全局组件规范 (Themed Components)
    ========================================================================== */
-@layer utilities {
-  /* 隐藏滚动条但保持功能 */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+@layer components {
+  .app-shell {
+    background-image:
+      radial-gradient(circle at 12% 18%, color-mix(in oklab, var(--color-primary) 10%, transparent), transparent 45%),
+      radial-gradient(circle at 86% 2%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 40%);
   }
 
+  /* 1. 侧边栏 (Sidebar) 统一适配 */
+  .app-sidebar {
+    background: var(--color-card);
+    border-right: var(--sidebar-border, 1px solid var(--color-border));
+    transition: all 0.3s ease;
+    box-shadow: 0 16px 38px rgb(15 23 42 / 0.08);
+  }
+  [data-theme='ai-clean'] .app-sidebar {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 252, 255, 0.78));
+    backdrop-filter: blur(22px) saturate(1.1);
+  }
+  [data-theme='win95'] .app-sidebar {
+    border-color: #ffffff #808080 #808080 #ffffff;
+  }
+  [data-theme='bauhaus'] .app-sidebar {
+    margin: 20px;
+    height: calc(100vh - 40px);
+    box-shadow: 10px 10px 0px #000;
+  }
+  [data-theme='apple'] .app-sidebar {
+    backdrop-filter: blur(40px);
+  }
+  [data-theme='cyber'] .app-sidebar {
+    border-right-width: 2px;
+  }
+
+  /* 2. 顶部导航 (Header) 统一适配 */
+  .app-header {
+    background: var(--color-card);
+    border-bottom: var(--header-border, 1px solid var(--color-border));
+    backdrop-filter: blur(20px);
+    box-shadow: 0 4px 18px rgb(15 23 42 / 0.03);
+  }
+  [data-theme='ai-clean'] .app-header {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(24px) saturate(1.12);
+  }
+  [data-theme='win95'] .app-header {
+    border-color: #ffffff #808080 #808080 #ffffff;
+    background: #c0c0c0;
+  }
+  [data-theme='paper'] .app-header {
+    border-bottom-width: 4px;
+  }
+  [data-theme='cyber'] .app-header {
+    border-bottom-width: 2px;
+    background: #000;
+  }
+
+  /* 3. 语义表面层 (Surfaces) */
+  .app-surface,
   .neo-convex {
     background-color: var(--color-card);
-    box-shadow: var(--shadow-neo-flat);
-    backdrop-filter: blur(var(--glass-blur, 0px));
-    border: 1px solid var(--glass-border, transparent);
-    @apply transition-all duration-300;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base, 1rem);
+    box-shadow: var(--shadow-main);
+    transition: all 0.2s ease;
+  }
+  .app-recess,
+  .neo-concave {
+    background-color: var(--color-muted);
+    border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+    border-radius: var(--radius-base, 1rem);
+    box-shadow: var(--shadow-neo-inset, inset 0 1px 2px rgba(15, 23, 42, 0.04));
+    transition: all 0.2s ease;
+  }
+  .app-panel {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base, 1rem);
+    box-shadow: var(--shadow-main);
+  }
+  .app-chip {
+    background-color: var(--color-muted);
+    border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+    border-radius: 999px;
+  }
+  [data-theme='ai-clean'] .app-surface,
+  [data-theme='ai-clean'] .neo-convex {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.78));
+    border-color: rgba(113, 128, 150, 0.18);
+  }
+  [data-theme='ai-clean'] .app-surface:hover,
+  [data-theme='ai-clean'] .neo-convex:hover {
+    border-color: rgba(37, 99, 235, 0.22);
+    box-shadow: 0 22px 56px rgba(31, 41, 55, 0.1), 0 4px 14px rgba(37, 99, 235, 0.06);
+  }
+  [data-theme='ai-clean'] .app-recess,
+  [data-theme='ai-clean'] .neo-concave {
+    background: rgba(241, 246, 253, 0.74);
+    border-color: rgba(113, 128, 150, 0.12);
+  }
+  [data-theme='win95'] .app-surface,
+  [data-theme='win95'] .neo-convex {
+    border-color: #ffffff #808080 #808080 #ffffff;
+    border-width: 2px;
+  }
+  [data-theme='paper'] .app-surface,
+  [data-theme='paper'] .neo-convex {
+    border: none;
+    border-left: 6px solid #000;
+    border-bottom: 1px solid #000;
   }
 
-  .neo-concave {
-    background-color: var(--color-card);
-    box-shadow: var(--shadow-neo-inset);
-    backdrop-filter: blur(var(--glass-blur, 0px));
-    @apply transition-all duration-300;
+  /* 4. 按钮 (Buttons) */
+  .app-btn-primary {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground, #fff);
+    border: 1px solid transparent;
+    border-radius: var(--radius-base, 0.75rem);
+    padding: 0.5rem 1.25rem;
+    font-weight: bold;
+    transition: all 0.2s;
+  }
+  [data-theme='win95'] .app-btn-primary {
+    background: #c0c0c0;
+    color: #000;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+  }
+  [data-theme='win95'] .app-btn-primary:active {
+    border-color: #808080 #ffffff #ffffff #808080;
+  }
+  [data-theme='bauhaus'] .app-btn-primary {
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0px #000;
+  }
+  [data-theme='bauhaus'] .app-btn-primary:active {
+    box-shadow: 0px 0px 0px #000;
+    transform: translate(4px, 4px);
+  }
+
+  /* 5. 输入框 (Inputs) */
+  .app-input {
+    background: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base, 0.5rem);
+    padding: 0.75rem 1rem;
+    color: var(--color-foreground);
+    outline: none;
+    transition: all 0.2s;
+  }
+  [data-theme='win95'] .app-input {
+    background: #fff;
+    border-color: #808080 #ffffff #ffffff #808080;
+    border-width: 2px;
+  }
+  [data-theme='paper'] .app-input {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid #000;
+    border-radius: 0;
+  }
+
+  [data-theme='ai-clean'] .bg-primary {
+    background: linear-gradient(135deg, #2563eb, #0f766e);
+  }
+
+  [data-theme='ai-clean'] .text-primary {
+    color: #2563eb;
+  }
+
+  [data-theme='ai-clean'] .border-white\/40 {
+    border-color: rgba(113, 128, 150, 0.16);
   }
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
 @layer base {
+  [data-theme='ai-clean'] body {
+    background:
+      linear-gradient(rgba(37, 99, 235, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37, 99, 235, 0.035) 1px, transparent 1px),
+      linear-gradient(180deg, #f8fbff 0%, #f4f7fb 42%, #eef4f8 100%);
+    background-size: 32px 32px, 32px 32px, auto;
+  }
+
   body {
     @apply bg-background text-foreground antialiased transition-colors duration-500;
+    font-family: var(--font-body, "Inter", sans-serif);
   }
 }

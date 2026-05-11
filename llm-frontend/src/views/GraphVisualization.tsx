@@ -156,7 +156,7 @@ const GraphVisualizationContent: React.FC = () => {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('/graph-orchestration')}
-            className="w-10 h-10 neo-convex rounded-xl flex items-center justify-center text-foreground/40 hover:text-primary active:scale-95 transition-all"
+            className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-foreground/40 hover:text-primary active:scale-95 transition-all"
           >
             <ArrowLeft size={18} />
           </button>
@@ -170,7 +170,7 @@ const GraphVisualizationContent: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => fitView({ padding: 0.2 })}
-            className="px-4 py-2 neo-convex rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
+            className="px-4 py-2 app-surface rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all"
           >
             FIT
           </button>
@@ -178,7 +178,7 @@ const GraphVisualizationContent: React.FC = () => {
       </header>
 
       {/* 画布区域 */}
-      <div className="flex-1 relative neo-concave rounded-3xl mx-4 mb-4 overflow-hidden">
+      <div className="flex-1 relative app-recess rounded-3xl mx-4 mb-4 overflow-hidden">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/50 backdrop-blur-sm">
             <div className="text-center">
@@ -196,7 +196,7 @@ const GraphVisualizationContent: React.FC = () => {
               {loadError && (
                 <button
                   onClick={loadGraphData}
-                  className="mt-4 px-4 py-2 neo-convex rounded-xl text-[11px] font-black tracking-widest text-primary active:scale-95 transition-all"
+                  className="mt-4 px-4 py-2 app-surface rounded-xl text-[11px] font-black tracking-widest text-primary active:scale-95 transition-all"
                 >
                   RETRY
                 </button>

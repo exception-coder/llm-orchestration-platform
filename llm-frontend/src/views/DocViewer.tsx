@@ -40,7 +40,7 @@ const TreeItem: React.FC<{
       <div 
         onClick={item.type === 'DIRECTORY' ? toggle : select}
         className={`flex items-center gap-3 px-4 py-2 rounded-2xl cursor-pointer transition-all duration-200 group ${
-          isActive ? 'neo-convex text-primary font-bold z-10' : 'hover:bg-foreground/5 text-foreground/60'
+          isActive ? 'app-surface text-primary font-bold z-10' : 'hover:bg-foreground/5 text-foreground/60'
         }`}
         style={{ marginLeft: depth * 12 + 'px' }}
       >
@@ -143,8 +143,8 @@ const DocViewer: React.FC = () => {
         }`}
       >
         {/* 搜索槽位 */}
-        <div className="p-6 neo-convex rounded-[2.5rem] mb-6">
-          <div className="relative neo-concave rounded-2xl p-1 flex items-center group transition-all focus-within:ring-2 ring-primary/20">
+        <div className="p-6 app-surface rounded-[2.5rem] mb-6">
+          <div className="relative app-recess rounded-2xl p-1 flex items-center group transition-all focus-within:ring-2 ring-primary/20">
             <div className="pl-4 text-foreground/30"><Search size={16} /></div>
             <input 
               value={searchKeyword}
@@ -156,7 +156,7 @@ const DocViewer: React.FC = () => {
             <button 
               onClick={handleSearch}
               disabled={searchLoading}
-              className="p-2 mr-1 rounded-xl neo-convex text-primary active:scale-90 transition-all disabled:opacity-50"
+              className="p-2 mr-1 rounded-xl app-surface text-primary active:scale-90 transition-all disabled:opacity-50"
             >
               {!searchLoading ? <ArrowRight size={16} /> : <Loader2 size={16} className="animate-spin" />}
             </button>
@@ -164,7 +164,7 @@ const DocViewer: React.FC = () => {
         </div>
 
         {/* 目录内容区 */}
-        <div className="flex-1 neo-concave rounded-[2.5rem] p-4 overflow-y-auto overflow-x-hidden space-y-2 no-scrollbar">
+        <div className="flex-1 app-recess rounded-[2.5rem] p-4 overflow-y-auto overflow-x-hidden space-y-2 no-scrollbar">
           
           {/* 搜索结果模式 */}
           {searchResults.length > 0 ? (
@@ -180,7 +180,7 @@ const DocViewer: React.FC = () => {
                   className="p-4 rounded-2xl hover:bg-foreground/5 cursor-pointer transition-all border border-transparent hover:border-white/10 group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 neo-convex rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <div className="w-8 h-8 app-surface rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                       <FileText size={16} />
                     </div>
                     <div className="flex-1 overflow-hidden">
@@ -197,7 +197,7 @@ const DocViewer: React.FC = () => {
               {treeLoading ? (
                 <div className="p-4 space-y-4">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-10 w-full neo-convex rounded-xl animate-pulse opacity-50"></div>
+                    <div key={i} className="h-10 w-full app-surface rounded-xl animate-pulse opacity-50"></div>
                   ))}
                 </div>
               ) : (
@@ -233,8 +233,8 @@ const DocViewer: React.FC = () => {
               exit={{ opacity: 0, scale: 0.9 }}
               className="flex-1 flex items-center justify-center"
             >
-              <div className="neo-convex p-16 rounded-[4rem] text-center space-y-6 max-w-sm">
-                <div className="w-24 h-24 neo-concave rounded-[2rem] mx-auto flex items-center justify-center text-foreground/10">
+              <div className="app-surface p-16 rounded-[4rem] text-center space-y-6 max-w-sm">
+                <div className="w-24 h-24 app-recess rounded-[2rem] mx-auto flex items-center justify-center text-foreground/10">
                   <Library size={48} />
                 </div>
                 <div>
@@ -250,14 +250,14 @@ const DocViewer: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="flex-1 flex flex-col neo-convex rounded-[3rem] overflow-hidden"
+              className="flex-1 flex flex-col app-surface rounded-[3rem] overflow-hidden"
             >
               {/* 工具栏 */}
               <header className="h-16 flex items-center px-8 border-b border-white/5 bg-white/5 backdrop-blur-md">
                 {isMobile && (
                   <button 
                     onClick={() => setCurrentDoc(null)}
-                    className="mr-4 w-8 h-8 neo-convex rounded-full flex items-center justify-center text-foreground/60 active:scale-90"
+                    className="mr-4 w-8 h-8 app-surface rounded-full flex items-center justify-center text-foreground/60 active:scale-90"
                   >
                     <ChevronLeft size={18} />
                   </button>
@@ -266,10 +266,10 @@ const DocViewer: React.FC = () => {
                   {currentDoc.path}
                 </span>
                 <div className="flex items-center gap-2">
-                  <button className="w-8 h-8 neo-convex rounded-full flex items-center justify-center text-foreground/40 hover:text-primary transition-colors">
+                  <button className="w-8 h-8 app-surface rounded-full flex items-center justify-center text-foreground/40 hover:text-primary transition-colors">
                     <Share2 size={14} />
                   </button>
-                  <button onClick={() => setCurrentDoc(null)} className="w-8 h-8 neo-convex rounded-full flex items-center justify-center text-red-500/40 hover:text-red-500 transition-colors">
+                  <button onClick={() => setCurrentDoc(null)} className="w-8 h-8 app-surface rounded-full flex items-center justify-center text-red-500/40 hover:text-red-500 transition-colors">
                     <X size={14} />
                   </button>
                 </div>
@@ -279,10 +279,10 @@ const DocViewer: React.FC = () => {
               <div className="flex-1 overflow-y-auto p-12 scroll-smooth no-scrollbar">
                 {contentLoading ? (
                   <div className="space-y-6">
-                    <div className="h-12 w-2/3 neo-concave rounded-2xl animate-pulse"></div>
+                    <div className="h-12 w-2/3 app-recess rounded-2xl animate-pulse"></div>
                     <div className="space-y-3">
                       {[...Array(10)].map((_, i) => (
-                        <div key={i} className={`h-4 neo-concave rounded-full animate-pulse opacity-40 ${i % 3 === 0 ? 'w-full' : 'w-5/6'}`}></div>
+                        <div key={i} className={`h-4 app-recess rounded-full animate-pulse opacity-40 ${i % 3 === 0 ? 'w-full' : 'w-5/6'}`}></div>
                       ))}
                     </div>
                   </div>

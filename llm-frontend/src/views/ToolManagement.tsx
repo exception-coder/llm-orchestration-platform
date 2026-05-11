@@ -48,7 +48,7 @@ const ToolManagement: React.FC = () => {
       {/* 1. 顶部控制台：动作中心 */}
       <header className="flex items-center justify-between px-6 flex-wrap gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-14 h-14 neo-convex rounded-[1.5rem] flex items-center justify-center text-primary shadow-xl">
+          <div className="w-14 h-14 app-surface rounded-[1.5rem] flex items-center justify-center text-primary shadow-xl">
             <Wrench size={28} />
           </div>
           <div>
@@ -58,7 +58,7 @@ const ToolManagement: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="neo-concave rounded-2xl px-4 py-2 flex items-center gap-3">
+          <div className="app-recess rounded-2xl px-4 py-2 flex items-center gap-3">
             <Search size={14} className="text-foreground/20" />
             <input 
               value={searchKeyword}
@@ -69,7 +69,7 @@ const ToolManagement: React.FC = () => {
           </div>
           <button 
             onClick={() => setShowCreateDialog(true)}
-            className="h-12 px-6 neo-convex rounded-2xl flex items-center gap-3 text-primary font-black tracking-widest active:scale-95 transition-all shadow-lg"
+            className="h-12 px-6 app-surface rounded-2xl flex items-center gap-3 text-primary font-black tracking-widest active:scale-95 transition-all shadow-lg"
           >
             <Plus size={18} />
             <span>REGISTER NEW TOOL</span>
@@ -78,9 +78,9 @@ const ToolManagement: React.FC = () => {
       </header>
 
       {/* 2. 物理数据舱 (The Table Hub) */}
-      <section className="neo-convex rounded-[3.5rem] overflow-hidden border border-white/40 shadow-2xl">
+      <section className="app-surface rounded-[3.5rem] overflow-hidden border border-white/40 shadow-2xl">
         {/* 表头槽位 (Header Slot) */}
-        <div className="grid grid-cols-12 gap-4 px-10 py-6 neo-concave bg-foreground/[0.02]">
+        <div className="grid grid-cols-12 gap-4 px-10 py-6 app-recess bg-foreground/[0.02]">
           <div className="col-span-3 text-[10px] font-black tracking-[0.2em] text-foreground/30 uppercase">Tool Identity</div>
           <div className="col-span-4 text-[10px] font-black tracking-[0.2em] text-foreground/30 uppercase">Description & Logic</div>
           <div className="col-span-2 text-[10px] font-black tracking-[0.2em] text-foreground/30 uppercase">Status</div>
@@ -101,7 +101,7 @@ const ToolManagement: React.FC = () => {
               >
                 {/* 身份列 */}
                 <div className="col-span-3 flex items-center gap-4">
-                  <div className="w-12 h-12 neo-convex rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 app-surface rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                     {tool.type === 'FUNCTION' ? (
                       <Code2 size={20} className="text-primary/60" />
                     ) : (
@@ -137,15 +137,15 @@ const ToolManagement: React.FC = () => {
 
                 {/* 操作列 */}
                 <div className="col-span-3 flex justify-end gap-3 opacity-40 group-hover:opacity-100 transition-opacity">
-                  <button className="px-4 py-2 neo-convex rounded-xl text-[10px] font-black tracking-widest hover:text-primary transition-all active:scale-95">
+                  <button className="px-4 py-2 app-surface rounded-xl text-[10px] font-black tracking-widest hover:text-primary transition-all active:scale-95">
                     EDIT
                   </button>
-                  <button className="px-4 py-2 neo-convex rounded-xl text-[10px] font-black tracking-widest hover:text-primary transition-all active:scale-95">
+                  <button className="px-4 py-2 app-surface rounded-xl text-[10px] font-black tracking-widest hover:text-primary transition-all active:scale-95">
                     DOCS
                   </button>
                   <button 
                     onClick={() => handleDelete(tool.id)}
-                    className="w-10 h-10 neo-convex rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-90 transition-all"
+                    className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-90 transition-all"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -180,8 +180,8 @@ const ToolManagement: React.FC = () => {
         
         {/* 极简分页 (Physical Tabs) */}
         <div className="flex gap-2">
-          <button className="w-10 h-10 neo-concave rounded-xl flex items-center justify-center text-primary font-bold">1</button>
-          <button className="w-10 h-10 neo-convex rounded-xl flex items-center justify-center text-foreground/30">2</button>
+          <button className="w-10 h-10 app-recess rounded-xl flex items-center justify-center text-primary font-bold">1</button>
+          <button className="w-10 h-10 app-surface rounded-xl flex items-center justify-center text-foreground/30">2</button>
         </div>
       </footer>
 

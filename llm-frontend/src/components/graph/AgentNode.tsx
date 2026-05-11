@@ -18,13 +18,13 @@ const AgentNode: React.FC<NodeProps> = ({ data }) => {
 
   return (
     <div
-      className={`min-w-[200px] max-w-[240px] rounded-2xl p-4 cursor-pointer transition-all duration-200 neo-convex hover:scale-[1.02] ${
+      className={`min-w-[200px] max-w-[240px] rounded-2xl p-4 cursor-pointer transition-all duration-200 app-surface hover:scale-[1.02] ${
         data.isEntry ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''
       }`}
     >
       {/* 顶部：图标 + 名称 */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-9 h-9 neo-concave rounded-xl flex items-center justify-center text-primary shrink-0">
+        <div className="w-9 h-9 app-recess rounded-xl flex items-center justify-center text-primary shrink-0">
           <Icon size={16} />
         </div>
         <div className="min-w-0 flex-1">
@@ -38,7 +38,7 @@ const AgentNode: React.FC<NodeProps> = ({ data }) => {
         <div className="mb-2">
           <p className="text-[11px] text-foreground/60 truncate">{(data.agent as any).name}</p>
           <div className="flex items-center gap-1.5 mt-1">
-            <span className="px-1.5 py-0.5 neo-concave rounded text-[9px] font-mono text-foreground/50">
+            <span className="px-1.5 py-0.5 app-recess rounded text-[9px] font-mono text-foreground/50">
               {(data.agent as any).llmModel || 'N/A'}
             </span>
           </div>
@@ -51,14 +51,14 @@ const AgentNode: React.FC<NodeProps> = ({ data }) => {
           {visibleTools.map((tool: any) => (
             <span
               key={tool.id}
-              className="px-1.5 py-0.5 neo-concave rounded text-[9px] font-mono text-foreground/40 truncate max-w-[80px]"
+              className="px-1.5 py-0.5 app-recess rounded text-[9px] font-mono text-foreground/40 truncate max-w-[80px]"
               title={tool.name}
             >
               {tool.name}
             </span>
           ))}
           {(data.tools as any[]).length > 3 && (
-            <span className="px-1.5 py-0.5 neo-concave rounded text-[9px] font-bold text-primary/60">
+            <span className="px-1.5 py-0.5 app-recess rounded text-[9px] font-bold text-primary/60">
               +{(data.tools as any[]).length - 3}
             </span>
           )}

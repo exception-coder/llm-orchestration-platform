@@ -35,7 +35,7 @@ const ModelManagement: React.FC = () => {
       {/* 顶部状态栏 */}
       <header className="flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 neo-convex rounded-2xl flex items-center justify-center text-primary shadow-lg">
+          <div className="w-12 h-12 app-surface rounded-2xl flex items-center justify-center text-primary shadow-lg">
             <Cpu size={24} />
           </div>
           <div>
@@ -45,7 +45,7 @@ const ModelManagement: React.FC = () => {
         </div>
         <button 
           onClick={() => setShowAddDialog(true)}
-          className="flex items-center gap-3 px-6 py-3 neo-convex rounded-2xl text-primary font-bold active:scale-95 transition-all"
+          className="flex items-center gap-3 px-6 py-3 app-surface rounded-2xl text-primary font-bold active:scale-95 transition-all"
         >
           <Plus size={18} />
           <span>接入新模型</span>
@@ -62,7 +62,7 @@ const ModelManagement: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="neo-convex p-8 rounded-[3rem] group relative flex flex-col transition-all hover:scale-[1.02]"
+              className="app-surface p-8 rounded-[3rem] group relative flex flex-col transition-all hover:scale-[1.02]"
             >
               {/* 材质装饰线 */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-primary/10 rounded-b-full"></div>
@@ -73,7 +73,7 @@ const ModelManagement: React.FC = () => {
                   <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">{model.provider}</p>
                 </div>
                 <div 
-                  className={`w-10 h-10 neo-concave rounded-xl flex items-center justify-center ${
+                  className={`w-10 h-10 app-recess rounded-xl flex items-center justify-center ${
                     model.enabled ? 'text-green-500' : 'text-foreground/10'
                   }`}
                 >
@@ -82,7 +82,7 @@ const ModelManagement: React.FC = () => {
               </div>
 
               {/* 详细参数 (Inset Panel) */}
-              <div className="flex-1 neo-concave rounded-3xl p-5 space-y-4 mb-8">
+              <div className="flex-1 app-recess rounded-3xl p-5 space-y-4 mb-8">
                 <div className="flex justify-between items-center text-[11px]">
                   <span className="font-bold text-foreground/30 uppercase">Model ID</span>
                   <span className="font-mono text-foreground/60">{model.modelId}</span>
@@ -95,12 +95,12 @@ const ModelManagement: React.FC = () => {
 
               {/* 操作按钮 */}
               <div className="flex gap-3">
-                <button className="flex-1 py-3 neo-convex rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all">
+                <button className="flex-1 py-3 app-surface rounded-xl text-[11px] font-black tracking-widest text-foreground/60 hover:text-primary active:scale-95 transition-all">
                   CONFIG
                 </button>
                 <button 
                   onClick={() => deleteModel(model.modelCode || model.id)}
-                  className="w-12 h-12 neo-convex rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-90 transition-all"
+                  className="w-12 h-12 app-surface rounded-xl flex items-center justify-center text-red-500/40 hover:text-red-500 active:scale-90 transition-all"
                 >
                   <Trash2 size={18} />
                 </button>

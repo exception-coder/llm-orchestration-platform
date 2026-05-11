@@ -54,10 +54,10 @@ const PromptTest: React.FC = () => {
     <div className="max-w-6xl mx-auto space-y-10">
       
       {/* 1. 实验参数区 (Physical Control Panel) */}
-      <header className="neo-convex p-8 rounded-[3rem] grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
+      <header className="app-surface p-8 rounded-[3rem] grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
         <div className="space-y-4">
           <label className="text-[10px] font-black tracking-widest text-foreground/40 uppercase px-2">Select Model</label>
-          <div className="neo-concave rounded-2xl p-1">
+          <div className="app-recess rounded-2xl p-1">
             <select 
               value={selectedModel} 
               onChange={(e) => setSelectedModel(e.target.value)}
@@ -72,7 +72,7 @@ const PromptTest: React.FC = () => {
 
         <div className="space-y-4">
           <label className="text-[10px] font-black tracking-widest text-foreground/40 uppercase px-2">Temperature</label>
-          <div className="neo-concave rounded-2xl p-4 flex items-center gap-4">
+          <div className="app-recess rounded-2xl p-4 flex items-center gap-4">
             <input 
               type="range" 
               min="0" max="2" step="0.1" 
@@ -87,7 +87,7 @@ const PromptTest: React.FC = () => {
         <button 
           onClick={runTest}
           disabled={loading}
-          className="h-14 neo-convex rounded-2xl flex items-center justify-center gap-3 text-primary font-black tracking-widest active:scale-95 transition-all disabled:opacity-50"
+          className="h-14 app-surface rounded-2xl flex items-center justify-center gap-3 text-primary font-black tracking-widest active:scale-95 transition-all disabled:opacity-50"
         >
           <Play size={18} className={loading ? 'animate-pulse' : ''} />
           <span>EXECUTE TEST</span>
@@ -98,14 +98,14 @@ const PromptTest: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 h-[600px]">
         
         {/* 输入槽 (Input Slot) */}
-        <section className="flex flex-col neo-convex rounded-[3rem] overflow-hidden border border-white/40">
+        <section className="flex flex-col app-surface rounded-[3rem] overflow-hidden border border-white/40">
           <div className="p-6 border-b border-foreground/5 flex items-center gap-3">
-            <div className="w-8 h-8 neo-concave rounded-xl flex items-center justify-center text-foreground/40">
+            <div className="w-8 h-8 app-recess rounded-xl flex items-center justify-center text-foreground/40">
               <Terminal size={16} />
             </div>
             <span className="text-[10px] font-black tracking-widest opacity-40 uppercase">System Prompt & Input</span>
           </div>
-          <div className="flex-1 neo-concave m-6 rounded-[2rem] p-6">
+          <div className="flex-1 app-recess m-6 rounded-[2rem] p-6">
             <textarea 
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
@@ -116,15 +116,15 @@ const PromptTest: React.FC = () => {
         </section>
 
         {/* 输出台 (Output Platform) */}
-        <section className="flex flex-col neo-convex rounded-[3rem] overflow-hidden border border-white/40">
+        <section className="flex flex-col app-surface rounded-[3rem] overflow-hidden border border-white/40">
           <div className="p-6 border-b border-foreground/5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 neo-concave rounded-xl flex items-center justify-center text-primary">
+              <div className="w-8 h-8 app-recess rounded-xl flex items-center justify-center text-primary">
                 <Zap size={16} />
               </div>
               <span className="text-[10px] font-black tracking-widest opacity-40 uppercase">AI Response</span>
             </div>
-            <button className="p-2 neo-convex rounded-xl text-foreground/30 hover:text-primary transition-colors">
+            <button className="p-2 app-surface rounded-xl text-foreground/30 hover:text-primary transition-colors">
               <Copy size={16} />
             </button>
           </div>

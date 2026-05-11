@@ -38,7 +38,7 @@ const ConditionalEdge: React.FC<EdgeProps> = ({
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             pointerEvents: 'all'
           }}
-          className="px-2 py-1 neo-concave rounded-lg text-[10px] font-bold text-foreground/60 whitespace-nowrap"
+          className="px-2 py-1 app-recess rounded-lg text-[10px] font-bold text-foreground/60 whitespace-nowrap"
         >
           {data?.condition as string}
         </div>
